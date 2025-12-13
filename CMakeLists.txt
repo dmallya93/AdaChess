@@ -71,6 +71,15 @@ if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     endif()
 endif()
 
+# Logging library
+add_library(yass_logging
+    src/yass/logging/messages.cpp
+)
+
+target_include_directories(yass_logging PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+)
+
 # Main executable
 add_executable(adachess
     src/app/main.cpp
@@ -80,11 +89,16 @@ target_include_directories(adachess PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
+target_link_libraries(adachess PRIVATE
+    yass_logging
+)
+
 # Tests
 enable_testing()
 
 add_executable(adachess_tests
     tests/test_main.cpp
+    tests/messages_tests.cpp
 )
 
 target_include_directories(adachess_tests PRIVATE
@@ -92,6 +106,7 @@ target_include_directories(adachess_tests PRIVATE
 )
 
 target_link_libraries(adachess_tests PRIVATE
+    yass_logging
     GTest::gtest
     GTest::gtest_main
 )

@@ -1,3 +1,5 @@
+#include "yass/logging/messages.hpp"
+
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -132,7 +134,7 @@ int main(int argc, char** argv) {
 
     case Command::Quit:
       running = false;
-      std::cout << "Goodbye!\n";
+      yass::logging::show_message("Goodbye!", yass::logging::message_type::success);
       break;
 
     case Command::Help:
@@ -172,8 +174,9 @@ int main(int argc, char** argv) {
       break;
 
     case Command::Unknown:
-      std::cout << "Unknown command: " << input << '\n';
-      std::cout << "Type 'help' for available commands.\n";
+      yass::logging::show_message("Unknown command: " + input, yass::logging::message_type::error);
+      yass::logging::show_message("Type 'help' for available commands.",
+                                  yass::logging::message_type::normal);
       break;
     }
 
