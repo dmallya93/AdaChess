@@ -21,7 +21,7 @@ graph_info.json
 *.exe
 *.out
 *.app
-adachess
+/adachess
 
 # Object files
 *.o

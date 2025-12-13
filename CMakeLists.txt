@@ -80,6 +80,19 @@ target_include_directories(yass_logging PUBLIC
     ${CMAKE_SOURCE_DIR}/include
 )
 
+# Configuration library
+add_library(yass_config
+    src/yass/config/config.cpp
+)
+
+target_include_directories(yass_config PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(yass_config PUBLIC
+    yass_logging
+)
+
 # Main executable
 add_executable(adachess
     src/app/main.cpp
@@ -91,6 +104,7 @@ target_include_directories(adachess PRIVATE
 
 target_link_libraries(adachess PRIVATE
     yass_logging
+    yass_config
 )
 
 # Tests
@@ -99,6 +113,8 @@ enable_testing()
 add_executable(adachess_tests
     tests/test_main.cpp
     tests/messages_tests.cpp
+    tests/chess_types_tests.cpp
+    tests/config_tests.cpp
 )
 
 target_include_directories(adachess_tests PRIVATE
@@ -107,6 +123,7 @@ target_include_directories(adachess_tests PRIVATE
 
 target_link_libraries(adachess_tests PRIVATE
     yass_logging
+    yass_config
     GTest::gtest
     GTest::gtest_main
 )

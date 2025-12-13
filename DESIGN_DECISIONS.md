@@ -2,6 +2,60 @@
 
 This document records major design decisions made during the Ada to C++ migration of the chess engine.
 
+## Design Decision #1: Configuration Storage and Parsing Strategy
+
+**Decision Date:** Task #3 - Configuration Module
+
+**Decision:** Custom C++ containers (std::unordered_map) with manual INI parsing
+
+### Rationale
+
+1. **Simplicity**: INI format is simple enough that a manual parser is straightforward and adds zero dependencies
+2. **Performance**: Direct map access without JSON overhead
+3. **Type Safety**: Separate containers for different tag types (simple vs. table) provides compile-time clarity
+4. **No External Dependencies**: Keeps the core configuration module dependency-free
+
+### Implementation Details
+
+- `site_config` struct: Plain C++ struct with typed fields
+- Simple tags: `std::unordered_map<std::string, std::string>`
+- Table tags: `std::unordered_map<std::string, std::vector<std::string>>`
+- Excluded files: `std::vector<std::string>`
+- Manual line-by-line parsing with string splitting on '='
+
+### Alternatives Considered
+
+- **nlohmann::json**: Adds external dependency, overkill for simple INI format
+- **boost::property_tree**: Heavy dependency, not worth it for basic key=value parsing
+- **inih library**: Adds dependency, minimal benefit over manual parsing
+- **std::variant approach**: More complex, unnecessary for our use case
+
+## Design Decision #2: String Handling and Path Management
+
+**Decision Date:** Task #3 - Configuration Module
+
+**Decision:** std::string + std::filesystem with std::string_view for read-only parameters
+
+### Rationale
+
+1. **Standard Library**: Uses only C++17/20 standard library features
+2. **Cross-Platform**: std::filesystem handles path separators automatically
+3. **Performance**: std::string_view avoids copies for read-only operations
+4. **Clarity**: std::filesystem::path makes intent explicit for path operations
+
+### Implementation Details
+
+- Storage: `std::string` for owned strings and paths
+- Parameters: `const std::string&` or `std::string_view` for read-only
+- Path operations: Convert to `std::filesystem::path` for normalization
+- Path normalization: Use `std::filesystem::absolute()` and `std::filesystem::canonical()`
+
+### Alternatives Considered
+
+- **std::filesystem::path everywhere**: More type-safe but verbose, conversion overhead
+- **Strong typedef wrappers**: Adds complexity without significant benefit
+- **Raw C strings**: Not idiomatic C++, loses RAII benefits
+
 ## Design Decision #4: Error Handling and Exception Strategy
 
 **Decision Date:** Task #2 - Messages Module and Error Handling Foundation
