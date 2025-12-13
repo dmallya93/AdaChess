@@ -1,0 +1,63 @@
+# Build directories
+build/
+cmake-build-*/
+out/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Testing/
+
+# Conan
+conaninfo.txt
+conanbuildinfo.*
+conan.lock
+graph_info.json
+
+# Compiled binaries
+*.exe
+*.out
+*.app
+adachess
+
+# Object files
+*.o
+*.obj
+*.lo
+*.slo
+*.ko
+*.elf
+
+# Libraries
+*.a
+*.lib
+*.la
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Clang tools
+.clangd/
+.cache/
+compile_commands.json
+
+# Coverage
+*.gcov
+*.gcda
+*.gcno
+coverage/
+
+# Sanitizer outputs
+*.log
