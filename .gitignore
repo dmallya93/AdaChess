@@ -1,0 +1,46 @@
+# Build artifacts
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Conan
+conan.lock
+conan_toolchain.cmake
+CMakeUserPresets.json
+conanbuildinfo.txt
+conaninfo.txt
+graph_info.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled binaries
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+adachess
+adachess_winboard
+tests
+
+# Test outputs
+Testing/
+CTestTestfile.cmake
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+
+# Sanitizer outputs
+*.log

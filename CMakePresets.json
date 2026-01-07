@@ -1,0 +1,54 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "gcc-debug",
+            "displayName": "GCC Debug",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/gcc-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_COMPILER": "g++-11",
+                "ENABLE_CLANG_TIDY": "OFF",
+                "ENABLE_SANITIZERS": "ON"
+            }
+        },
+        {
+            "name": "gcc-release",
+            "displayName": "GCC Release",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/gcc-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_COMPILER": "g++-11",
+                "ENABLE_CLANG_TIDY": "OFF",
+                "ENABLE_SANITIZERS": "OFF"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "gcc-debug",
+            "configurePreset": "gcc-debug"
+        },
+        {
+            "name": "gcc-release",
+            "configurePreset": "gcc-release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "gcc-debug",
+            "configurePreset": "gcc-debug"
+        },
+        {
+            "name": "gcc-release",
+            "configurePreset": "gcc-release"
+        }
+    ]
+}
