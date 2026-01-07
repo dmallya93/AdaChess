@@ -99,6 +99,8 @@ if(GTest_FOUND OR GTEST_FOUND)
         tests/test_node.cpp
         tests/test_hash.cpp
         tests/test_pin.cpp
+        tests/test_square.cpp
+        tests/test_direction.cpp
     )
 
     target_link_libraries(adachess_tests PRIVATE adachess_core)
