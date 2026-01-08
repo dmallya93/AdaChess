@@ -79,9 +79,11 @@ if(NOT GTest_FOUND AND NOT GTEST_FOUND)
     endif()
 endif()
 
-# Core library (header-only for now, will become STATIC library later)
-add_library(adachess_core INTERFACE)
-target_include_directories(adachess_core INTERFACE
+# Core library (now includes chessboard implementation)
+add_library(adachess_core STATIC
+    src/board/chessboard.cpp
+)
+target_include_directories(adachess_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
@@ -101,6 +103,7 @@ if(GTest_FOUND OR GTEST_FOUND)
         tests/test_pin.cpp
         tests/test_square.cpp
         tests/test_direction.cpp
+        tests/test_chessboard.cpp
     )
 
     target_link_libraries(adachess_tests PRIVATE adachess_core)
