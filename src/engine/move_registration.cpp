@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "adachess/engine/move_registration.hpp"
+#include "adachess/board/attack.hpp"
 #include <cassert>
 
 namespace adachess {
@@ -164,9 +165,22 @@ void register_tactical_move(Chessboard& board, const Move& move) {
 
 // Helper function stubs (to be implemented in future tasks)
 
-bool move_leaves_king_in_check(const Chessboard& /*board*/, const Move& /*move*/) {
-    // Stub: always returns false (assumes all moves are legal for now)
-    // This will be implemented in Task 6-8 with proper king safety checking
+bool move_leaves_king_in_check(const Chessboard& board, const Move& move) {
+    // For king moves, check if the destination square is attacked by opponent
+    Piece moving_piece = move.piece;
+    if (moving_piece == Piece::White_King || moving_piece == Piece::Black_King) {
+        Color our_color = piece_color(moving_piece);
+        Color enemy_color = !our_color;
+
+        // Check if the king's destination square is attacked by enemy
+        // Pass the king's current position as ignore_square so it doesn't block attacks
+        if (is_square_attacked(board, move.to, enemy_color, move.from)) {
+            return true;  // King would be in check
+        }
+    }
+
+    // For other pieces, legality checking is deferred to Task 9
+    // (pinned pieces, discovered checks, etc.)
     return false;
 }
 
