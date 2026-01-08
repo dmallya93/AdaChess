@@ -18,10 +18,13 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "adachess/board/chessboard.hpp"
+#include "adachess/core/zobrist.hpp"
 
 #include <cassert>
 
 namespace adachess::board {
+
+using adachess::core::Piece;
 
 // ====== Piece Management Operations ======
 
@@ -155,12 +158,12 @@ void update_black_piece(Chessboard& chessboard, Square from, Square to) {
 
 void reset(Chessboard& chessboard) {
     // Set side to move to White
-    chessboard.side_to_move = Color::White;
+    chessboard.side_to_move = adachess::core::Color::White;
 
     // Initialize board to empty with frame
     // Rows 0-1 and 10-11: Frame
     // Rows 2-9: Playable area with Frame on columns 0 and 9
-    chessboard.square = {
+    chessboard.board = {
         // Row 0 (all frame)
         Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame,
         Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame,
@@ -218,24 +221,21 @@ void reset(Chessboard& chessboard) {
     chessboard.black_castle_kingside.fill(false);
 
     // Clear en passant history
-    chessboard.en_passant.fill(0);
+    chessboard.en_passant_square.fill(0);
 
     // Reset move stack
-    chessboard.moves_pointer.fill(1);  // All plies start at index 1
+    chessboard.move_pointer.fill(1);  // All plies start at index 1
     // Note: moves_stack doesn't need clearing as it's accessed via moves_pointer
 
     // Reset ply counters
-    chessboard.ply = MIN_DEPTH;
+    chessboard.ply = 0;
     chessboard.history_ply = 0;
 
     // Clear move history
     // Note: moves_history doesn't need clearing as it's accessed via history_ply
 
     // Reset fifty-move counter
-    chessboard.fifty = 0;
-
-    // Reset validity test flag
-    chessboard.force_validity_test = false;
+    chessboard.fifty_move_counter.fill(0);
 }
 
 void initialize(Chessboard& chessboard) {
@@ -243,7 +243,7 @@ void initialize(Chessboard& chessboard) {
     reset(chessboard);
 
     // Set up the starting position
-    chessboard.square = {
+    chessboard.board = {
         // Row 0 (all frame)
         Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame,
         Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame,
@@ -251,13 +251,13 @@ void initialize(Chessboard& chessboard) {
         Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame,
         Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame,
         // Row 2 (Rank 8 - Black pieces)
-        Piece::Frame, Piece::BlackRook, Piece::BlackKnight, Piece::BlackBishop,
-        Piece::BlackQueen, Piece::BlackKing, Piece::BlackBishop,
-        Piece::BlackKnight, Piece::BlackRook, Piece::Frame,
+        Piece::Frame, Piece::Black_Rook, Piece::Black_Knight, Piece::Black_Bishop,
+        Piece::Black_Queen, Piece::Black_King, Piece::Black_Bishop,
+        Piece::Black_Knight, Piece::Black_Rook, Piece::Frame,
         // Row 3 (Rank 7 - Black pawns)
-        Piece::Frame, Piece::BlackPawn, Piece::BlackPawn, Piece::BlackPawn,
-        Piece::BlackPawn, Piece::BlackPawn, Piece::BlackPawn, Piece::BlackPawn,
-        Piece::BlackPawn, Piece::Frame,
+        Piece::Frame, Piece::Black_Pawn, Piece::Black_Pawn, Piece::Black_Pawn,
+        Piece::Black_Pawn, Piece::Black_Pawn, Piece::Black_Pawn, Piece::Black_Pawn,
+        Piece::Black_Pawn, Piece::Frame,
         // Row 4 (Rank 6 - Empty)
         Piece::Frame, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty,
         Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Frame,
@@ -271,13 +271,13 @@ void initialize(Chessboard& chessboard) {
         Piece::Frame, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty,
         Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Frame,
         // Row 8 (Rank 2 - White pawns)
-        Piece::Frame, Piece::WhitePawn, Piece::WhitePawn, Piece::WhitePawn,
-        Piece::WhitePawn, Piece::WhitePawn, Piece::WhitePawn, Piece::WhitePawn,
-        Piece::WhitePawn, Piece::Frame,
+        Piece::Frame, Piece::White_Pawn, Piece::White_Pawn, Piece::White_Pawn,
+        Piece::White_Pawn, Piece::White_Pawn, Piece::White_Pawn, Piece::White_Pawn,
+        Piece::White_Pawn, Piece::Frame,
         // Row 9 (Rank 1 - White pieces)
-        Piece::Frame, Piece::WhiteRook, Piece::WhiteKnight, Piece::WhiteBishop,
-        Piece::WhiteQueen, Piece::WhiteKing, Piece::WhiteBishop,
-        Piece::WhiteKnight, Piece::WhiteRook, Piece::Frame,
+        Piece::Frame, Piece::White_Rook, Piece::White_Knight, Piece::White_Bishop,
+        Piece::White_Queen, Piece::White_King, Piece::White_Bishop,
+        Piece::White_Knight, Piece::White_Rook, Piece::Frame,
         // Row 10 (all frame)
         Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame,
         Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame, Piece::Frame,
@@ -333,9 +333,10 @@ void initialize(Chessboard& chessboard) {
     chessboard.black_castle_kingside.fill(true);
 
     // Set side to move to White
-    chessboard.side_to_move = Color::White;
+    chessboard.side_to_move = adachess::core::Color::White;
 
-    // Note: Zobrist hash initialization will be added in Task 4
+    // Initialize Zobrist hash tables and compute initial position hash
+    adachess::core::initialize_hash(chessboard);
 }
 
 }  // namespace adachess::board

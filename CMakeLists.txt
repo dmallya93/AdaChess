@@ -79,9 +79,12 @@ if(NOT GTest_FOUND AND NOT GTEST_FOUND)
     endif()
 endif()
 
-# Core library (now includes chessboard implementation)
+# Core library (now includes chessboard, attack detection, move system, and zobrist hashing)
 add_library(adachess_core STATIC
     src/board/chessboard.cpp
+    src/board/attacks.cpp
+    src/board/move.cpp
+    src/core/zobrist.cpp
 )
 target_include_directories(adachess_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -104,6 +107,8 @@ if(GTest_FOUND OR GTEST_FOUND)
         tests/test_square.cpp
         tests/test_direction.cpp
         tests/test_chessboard.cpp
+        tests/test_attacks.cpp
+        tests/test_move.cpp
     )
 
     target_link_libraries(adachess_tests PRIVATE adachess_core)
