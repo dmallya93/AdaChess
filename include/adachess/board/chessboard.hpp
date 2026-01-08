@@ -8,6 +8,7 @@
 #include "adachess/board/square.hpp"
 #include "adachess/board/moves.hpp"
 #include "adachess/core/types.hpp"
+#include "adachess/core/history.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -73,6 +74,16 @@ public:
     // History ply for move history
     HistoryDepth history_ply = 0;
 
+    // Move history - stores played moves with hash and fifty counter
+    std::array<HistoryMove, MAX_HISTORY_DEPTH> moves_history{};
+
+    // Current position hash (Zobrist hash)
+    Hash hash = 0;
+
+    // Piece counters for tracking
+    uint8_t white_pieces_counter = 0;
+    uint8_t black_pieces_counter = 0;
+
     // Constructor
     Chessboard();
 
@@ -81,6 +92,38 @@ public:
 
     // Get number of moves at specific ply
     size_t moves_count(Depth at_ply) const;
+
+    // Piece tracking functions
+    // These update the pieces_list and piece_table structures
+    void add_white_piece(Square sq);
+    void add_black_piece(Square sq);
+    void delete_white_piece(Square sq);
+    void delete_black_piece(Square sq);
+    void update_white_piece(Square from, Square to);
+    void update_black_piece(Square from, Square to);
+
+    // Hash computation
+    void update_hash();
+
+    // Move operations
+    // Play a move on the board (modifies move.check field)
+    void play(Move& move);
+
+    // Undo the last move
+    void undo();
+
+    // Play a null move (pass turn, for null move pruning)
+    void play_null_move();
+
+    // Undo a null move
+    void undo_null_move();
+
+    // Get the last move played (or empty move if at start)
+    Move last_move_made() const;
+
+    // Force validity test flag
+    // When true, moves must be verified for legality (king not in check)
+    bool force_validity_test = false;
 };
 
 } // namespace adachess
