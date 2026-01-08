@@ -18,6 +18,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "adachess/board/chessboard.hpp"
+#include "adachess/board/attacks.hpp"
 #include "adachess/core/zobrist.hpp"
 
 #include <cassert>
@@ -236,6 +237,9 @@ void reset(Chessboard& chessboard) {
 
     // Reset fifty-move counter
     chessboard.fifty_move_counter.fill(0);
+
+    // Initialize attack detection function pointer array
+    initialize_attacks_to();
 }
 
 void initialize(Chessboard& chessboard) {
