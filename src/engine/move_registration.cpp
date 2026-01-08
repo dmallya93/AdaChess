@@ -77,9 +77,17 @@ void register_move(Chessboard& board, const Move& move) {
     // Assert that we're within bounds
     assert(moves_number < MAX_MOVE_STACK_SIZE);
 
-    // Legality test - skip illegal moves
-    if (move_leaves_king_in_check(board, move)) {
-        return;
+    // Perform legality test if required
+    // King moves always require legality test, or if force_validity_test is set
+    Piece moving_piece = move.piece;
+    bool is_king_move = (moving_piece == Piece::White_King || moving_piece == Piece::Black_King);
+
+    if (board.force_validity_test || is_king_move) {
+        // Need to make a mutable copy for the play/undo test
+        Move test_move = move;
+        if (move_leaves_king_in_check(board, test_move)) {
+            return;  // Skip illegal move
+        }
     }
 
     // Create the final move with check detection and disambiguation
@@ -145,9 +153,17 @@ void register_tactical_move(Chessboard& board, const Move& move) {
     // Assert that we're within bounds
     assert(moves_number < MAX_MOVE_STACK_SIZE);
 
-    // Legality test - skip illegal moves
-    if (move_leaves_king_in_check(board, move)) {
-        return;
+    // Perform legality test if required
+    // King moves always require legality test, or if force_validity_test is set
+    Piece moving_piece = move.piece;
+    bool is_king_move = (moving_piece == Piece::White_King || moving_piece == Piece::Black_King);
+
+    if (board.force_validity_test || is_king_move) {
+        // Need to make a mutable copy for the play/undo test
+        Move test_move = move;
+        if (move_leaves_king_in_check(board, test_move)) {
+            return;  // Skip illegal move
+        }
     }
 
     // Create the final move with check detection
@@ -165,23 +181,26 @@ void register_tactical_move(Chessboard& board, const Move& move) {
 
 // Helper function stubs (to be implemented in future tasks)
 
-bool move_leaves_king_in_check(const Chessboard& board, const Move& move) {
-    // For king moves, check if the destination square is attacked by opponent
-    Piece moving_piece = move.piece;
-    if (moving_piece == Piece::White_King || moving_piece == Piece::Black_King) {
-        Color our_color = piece_color(moving_piece);
-        Color enemy_color = !our_color;
+bool move_leaves_king_in_check(Chessboard& board, Move& move) {
+    // Perform full legality test using Play/Undo
+    // This properly handles pinned pieces, discovered checks, etc.
 
-        // Check if the king's destination square is attacked by enemy
-        // Pass the king's current position as ignore_square so it doesn't block attacks
-        if (is_square_attacked(board, move.to, enemy_color, move.from)) {
-            return true;  // King would be in check
-        }
-    }
+    Color our_color = board.side_to_move;
 
-    // For other pieces, legality checking is deferred to Task 9
-    // (pinned pieces, discovered checks, etc.)
-    return false;
+    // Play the move
+    board.play(move);
+
+    // Check if our king is in check after the move
+    // Note: after play(), side_to_move has switched to opponent
+    // We need to get the king position AFTER the move (in case king moved)
+    Color enemy_color = board.side_to_move;
+    Square our_king_pos = (our_color == Color::White) ? board.white_king_position : board.black_king_position;
+    bool king_in_check = is_square_attacked(board, our_king_pos, enemy_color, 0);
+
+    // Undo the move
+    board.undo();
+
+    return king_in_check;
 }
 
 CheckType move_checks_opponent_king(const Chessboard& /*board*/, const Move& /*move*/) {

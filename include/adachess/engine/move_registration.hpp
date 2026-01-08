@@ -43,7 +43,8 @@ void register_tactical_move(Chessboard& board, const Move& move);
 
 // Check if a move leaves the king in check (legality test)
 // Returns true if the move is illegal
-bool move_leaves_king_in_check(const Chessboard& board, const Move& move);
+// Note: This function modifies the board temporarily (play/undo)
+bool move_leaves_king_in_check(Chessboard& board, Move& move);
 
 // Check if a move gives check to the opponent king
 // Returns the type of check
