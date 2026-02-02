@@ -22,9 +22,14 @@
 #include "adachess/history.hpp"
 #include "adachess/moves.hpp"
 #include "adachess/board/board.hpp"
+#include "adachess/board/attacks_data.hpp"
 #include "adachess/engine/engine.hpp"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
+    // Initialize attack tables at startup
+    chess::board::preload_sliding_direction();
+    chess::board::initialize_attacks_dispatch_table();
+
     std::cout << "AdaChess - Smart Chess Engine" << std::endl;
     std::cout << std::endl;
 
