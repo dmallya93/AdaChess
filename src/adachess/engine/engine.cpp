@@ -15,9 +15,12 @@
 
 #include "adachess/engine/engine.hpp"
 #include "adachess/board/attacks_data.hpp"
+#include "adachess/io/io.hpp"
 
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
+#include <cctype>
 
 namespace chess::engine {
 
@@ -3317,6 +3320,77 @@ AmbiguousFlag Chessboard::detect_ambiguous_move_notation(const Move& move) {
     }
 
     return AmbiguousFlag::None;
+}
+
+// ============================================================================
+// Move Parsing Implementation
+// ============================================================================
+
+namespace {
+
+/**
+ * Convert a string to lowercase for case-insensitive comparison.
+ */
+[[nodiscard]] std::string to_lower_string(const std::string& str) {
+    std::string result = str;
+    std::transform(result.begin(), result.end(), result.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return result;
+}
+
+} // anonymous namespace
+
+Move Chessboard::parse_move(const std::string& input) {
+    // First, generate all legal moves for the current position
+    generate_moves();
+
+    // Convert input to lowercase for comparison
+    std::string input_lower = to_lower_string(input);
+
+    // Iterate through all legal moves at current ply
+    for (std::size_t i = moves_pointer[ply]; i < moves_pointer[ply + 1]; ++i) {
+        Move& move = moves_stack[i];
+
+        // Try to match against each notation format
+        for (std::size_t notation_idx = 0; notation_idx < kNumNotationTypes; ++notation_idx) {
+            NotationType notation = static_cast<NotationType>(notation_idx);
+
+            // Convert move to string in this notation
+            std::string move_str = io::move_to_string(move, notation);
+
+            // Convert to lowercase for case-insensitive comparison
+            std::string move_str_lower = to_lower_string(move_str);
+
+            // Compare (case-insensitive)
+            if (move_str_lower == input_lower) {
+                return move;
+            }
+        }
+    }
+
+    // No match found - return empty move
+    return kEmptyMove;
+}
+
+// ============================================================================
+// Move List Printing Implementation
+// ============================================================================
+
+void Chessboard::print_moves_list(NotationType notation, std::ostream& out) {
+    // Generate legal moves if needed
+    generate_moves();
+
+    // Iterate through all legal moves at current ply
+    for (std::size_t i = moves_pointer[ply]; i < moves_pointer[ply + 1]; ++i) {
+        const Move& move = moves_stack[i];
+
+        // Print move with separator
+        io::print_move(move, notation, out);
+        out << " ";
+    }
+
+    // Print newline at end
+    out << "\n";
 }
 
 } // namespace chess::engine
