@@ -72,27 +72,27 @@ Direction get_direction_impl(Square origin, Square destination) noexcept {
     }
 
     // Same diagonal (NE-SW diagonal, like a1-h8)
-    // Moving NE: lower index and higher file = index decreases by 9 each step
-    // Moving SW: higher index and lower file = index increases by 9 each step
+    // The direction indicates the line connecting the squares from origin TO destination
     if (diagonal(origin) == diagonal(destination)) {
-        if (origin > destination) {
-            // destination has lower index = moving northeast
+        if (origin < destination) {
+            // destination has higher index (south/lower rank) = direction is NorthEast
+            // (matches Ada behavior: origin < destination => North_East)
             return kNorthEast;
         } else {
-            // destination has higher index = moving southwest
+            // destination has lower index (north/higher rank) = direction is SouthWest
             return kSouthWest;
         }
     }
 
     // Same anti-diagonal (NW-SE diagonal, like a8-h1)
-    // Moving NW: lower index and lower file = index decreases by 11 each step
-    // Moving SE: higher index and higher file = index increases by 11 each step
+    // The direction indicates the line connecting the squares from origin TO destination
     if (anti_diagonal(origin) == anti_diagonal(destination)) {
-        if (origin > destination) {
-            // destination has lower index = moving northwest
+        if (origin < destination) {
+            // destination has higher index (south/lower rank) = direction is NorthWest
+            // (matches Ada behavior: origin < destination => North_West)
             return kNorthWest;
         } else {
-            // destination has higher index = moving southeast
+            // destination has lower index (north/higher rank) = direction is SouthEast
             return kSouthEast;
         }
     }

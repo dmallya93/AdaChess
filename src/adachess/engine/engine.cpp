@@ -3368,6 +3368,32 @@ Move Chessboard::parse_move(const std::string& input) {
         }
     }
 
+    // Second pass: try to match without check symbols for better usability
+    // This allows users to enter "Qxf7" even when the move is "Qxf7+"
+    for (std::size_t i = moves_pointer[ply]; i < moves_pointer[ply + 1]; ++i) {
+        Move& move = moves_stack[i];
+
+        // Create a copy without check for comparison
+        Move move_no_check = move;
+        move_no_check.check = CheckType::NoCheck;
+
+        // Try to match against each notation format without check symbols
+        for (std::size_t notation_idx = 0; notation_idx < kNumNotationTypes; ++notation_idx) {
+            NotationType notation = static_cast<NotationType>(notation_idx);
+
+            // Convert move (without check) to string
+            std::string move_str = io::move_to_string(move_no_check, notation);
+
+            // Convert to lowercase for case-insensitive comparison
+            std::string move_str_lower = to_lower_string(move_str);
+
+            // Compare (case-insensitive)
+            if (move_str_lower == input_lower) {
+                return move;  // Return the original move with check info
+            }
+        }
+    }
+
     // No match found - return empty move
     return kEmptyMove;
 }
