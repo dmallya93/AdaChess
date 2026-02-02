@@ -4,7 +4,9 @@
 # Core Library - Foundation Types
 # ============================================================================
 
-# Core type system sources (colors, pieces, score, hashes, board, moves, engine, etc.)
+# Core type system sources (colors, pieces, score, hashes, board, moves, io, engine, etc.)
+# Note: io.cpp is included in core since it only depends on core types (Move, Piece, etc.)
+# and engine.cpp uses io.hpp for move_to_string conversions.
 set(ADACHESS_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/pieces.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/score.cpp
@@ -12,6 +14,7 @@ set(ADACHESS_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/board/board.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/board/attacks_data.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/moves.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/adachess/io/io.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/engine/engine.cpp
 )
 
@@ -28,6 +31,8 @@ set(ADACHESS_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/adachess/pins.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/history.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/moves.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/notations.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/io/io.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/board.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/directions.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/attacks_data.hpp
@@ -72,7 +77,7 @@ target_include_directories(adachess_libs PUBLIC
 target_compile_features(adachess_libs PUBLIC cxx_std_17)
 
 # ============================================================================
-# I/O Library (console display, FEN, PGN)
+# I/O Library (console display, FEN, PGN, move notation)
 # ============================================================================
 
 set(ADACHESS_IO_SOURCES

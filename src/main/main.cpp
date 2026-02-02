@@ -30,6 +30,8 @@
 #include "adachess/libs/timers/timers.hpp"
 #include "adachess/info.hpp"
 #include "adachess/io/consoles.hpp"
+#include "adachess/io/io.hpp"
+#include "adachess/notations.hpp"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     // Initialize attack tables at startup
@@ -277,6 +279,217 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     board.initialize();  // Re-initialize the board
     std::cout << "Initial position:" << std::endl;
     chess::io::consoles::display_on_console(board);
+
+    // ========================================================================
+    // Test move notation and parsing
+    // ========================================================================
+    std::cout << std::endl << "Testing move notation..." << std::endl;
+
+    // Create a simple move (e2-e4)
+    chess::Move e2e4_move{
+        chess::Piece::WhitePawn,
+        chess::board::E2,
+        chess::board::E4,
+        chess::Piece::Empty,
+        chess::MoveFlag::PawnMoveTwoSquares
+    };
+
+    // Test Pure Algebraic notation
+    std::string pure_alg = chess::io::move_to_pure_algebraic(e2e4_move);
+    if (pure_alg != "e2e4") {
+        std::cout << "ERROR: Pure algebraic notation failed. Expected 'e2e4', got '" << pure_alg << "'" << std::endl;
+        return 1;
+    }
+    std::cout << "Pure Algebraic: " << pure_alg << std::endl;
+
+    // Test Standard Algebraic notation
+    std::string san = chess::io::move_to_standard_algebraic(e2e4_move);
+    if (san != "e4") {
+        std::cout << "ERROR: SAN notation failed. Expected 'e4', got '" << san << "'" << std::endl;
+        return 1;
+    }
+    std::cout << "Standard Algebraic (SAN): " << san << std::endl;
+
+    // Test Long Algebraic notation
+    std::string lan = chess::io::move_to_long_algebraic(e2e4_move);
+    if (lan != "e2-e4") {
+        std::cout << "ERROR: LAN notation failed. Expected 'e2-e4', got '" << lan << "'" << std::endl;
+        return 1;
+    }
+    std::cout << "Long Algebraic (LAN): " << lan << std::endl;
+
+    // Test ICCF notation
+    std::string iccf = chess::io::move_to_iccf(e2e4_move);
+    if (iccf != "5254") {
+        std::cout << "ERROR: ICCF notation failed. Expected '5254', got '" << iccf << "'" << std::endl;
+        return 1;
+    }
+    std::cout << "ICCF: " << iccf << std::endl;
+
+    // Test knight move with SAN
+    chess::Move nf3_move{
+        chess::Piece::WhiteKnight,
+        chess::board::G1,
+        chess::board::F3,
+        chess::Piece::Empty,
+        chess::MoveFlag::Standard
+    };
+    std::string nf3_san = chess::io::move_to_standard_algebraic(nf3_move);
+    if (nf3_san != "Nf3") {
+        std::cout << "ERROR: Knight SAN notation failed. Expected 'Nf3', got '" << nf3_san << "'" << std::endl;
+        return 1;
+    }
+    std::cout << "Knight SAN: " << nf3_san << std::endl;
+
+    // Test castling move
+    chess::Move castle_move{
+        chess::Piece::WhiteKing,
+        chess::board::E1,
+        chess::board::G1,
+        chess::Piece::Empty,
+        chess::MoveFlag::Castle
+    };
+    std::string castle_san = chess::io::move_to_standard_algebraic(castle_move);
+    if (castle_san != "O-O") {
+        std::cout << "ERROR: Castle SAN notation failed. Expected 'O-O', got '" << castle_san << "'" << std::endl;
+        return 1;
+    }
+    std::cout << "Castle SAN: " << castle_san << std::endl;
+
+    // Test capture move
+    chess::Move capture_move{
+        chess::Piece::WhitePawn,
+        chess::board::E4,
+        chess::board::D5,
+        chess::Piece::BlackPawn,
+        chess::MoveFlag::Standard
+    };
+    std::string capture_san = chess::io::move_to_standard_algebraic(capture_move);
+    if (capture_san != "exd5") {
+        std::cout << "ERROR: Capture SAN notation failed. Expected 'exd5', got '" << capture_san << "'" << std::endl;
+        return 1;
+    }
+    std::cout << "Capture SAN: " << capture_san << std::endl;
+
+    // Test promotion move
+    chess::Move promo_move{
+        chess::Piece::WhitePawn,
+        chess::board::E7,
+        chess::board::E8,
+        chess::Piece::Empty,
+        chess::MoveFlag::Promotion,
+        chess::Piece::WhiteQueen
+    };
+    std::string promo_san = chess::io::move_to_standard_algebraic(promo_move);
+    if (promo_san != "e8=q") {
+        std::cout << "ERROR: Promotion SAN notation failed. Expected 'e8=q', got '" << promo_san << "'" << std::endl;
+        return 1;
+    }
+    std::cout << "Promotion SAN: " << promo_san << std::endl;
+
+    // Test check notation
+    chess::Move check_move{
+        chess::Piece::WhiteQueen,
+        chess::board::D1,
+        chess::board::H5,
+        chess::Piece::Empty,
+        chess::MoveFlag::Standard,
+        chess::Piece::Empty,
+        chess::CheckType::DirectCheck
+    };
+    std::string check_san = chess::io::move_to_standard_algebraic(check_move);
+    if (check_san != "Qh5+") {
+        std::cout << "ERROR: Check SAN notation failed. Expected 'Qh5+', got '" << check_san << "'" << std::endl;
+        return 1;
+    }
+    std::cout << "Check SAN: " << check_san << std::endl;
+
+    std::cout << "Move notation tests passed!" << std::endl;
+
+    // ========================================================================
+    // Test print_moves_list and parse_move
+    // ========================================================================
+    std::cout << std::endl << "Testing print_moves_list..." << std::endl;
+
+    // Print all legal moves from the initial position in various notations
+    std::cout << "Legal moves from starting position (SAN):" << std::endl;
+    board.print_moves_list(chess::NotationType::StandardAlgebraic);
+
+    std::cout << "Legal moves from starting position (coordinate):" << std::endl;
+    board.print_moves_list(chess::NotationType::PureAlgebraic);
+
+    // Test parse_move
+    std::cout << std::endl << "Testing parse_move..." << std::endl;
+
+    // Parse "e4" from SAN
+    chess::Move parsed_e4 = board.parse_move("e4");
+    if (!chess::move_is_valid(parsed_e4)) {
+        std::cout << "ERROR: Failed to parse 'e4'" << std::endl;
+        return 1;
+    }
+    if (parsed_e4.to != chess::board::E4) {
+        std::cout << "ERROR: Parsed move destination incorrect" << std::endl;
+        return 1;
+    }
+    std::cout << "Parsed 'e4': " << chess::io::move_to_string(parsed_e4, chess::NotationType::LongAlgebraic) << std::endl;
+
+    // Parse "e2e4" from coordinate notation
+    chess::Move parsed_coord = board.parse_move("e2e4");
+    if (!chess::move_is_valid(parsed_coord)) {
+        std::cout << "ERROR: Failed to parse 'e2e4'" << std::endl;
+        return 1;
+    }
+    std::cout << "Parsed 'e2e4': " << chess::io::move_to_string(parsed_coord, chess::NotationType::StandardAlgebraic) << std::endl;
+
+    // Parse "Nf3" from SAN
+    chess::Move parsed_nf3 = board.parse_move("Nf3");
+    if (!chess::move_is_valid(parsed_nf3)) {
+        std::cout << "ERROR: Failed to parse 'Nf3'" << std::endl;
+        return 1;
+    }
+    std::cout << "Parsed 'Nf3': " << chess::io::move_to_string(parsed_nf3, chess::NotationType::LongAlgebraic) << std::endl;
+
+    // Parse case-insensitive "NF3"
+    chess::Move parsed_nf3_upper = board.parse_move("NF3");
+    if (!chess::move_is_valid(parsed_nf3_upper)) {
+        std::cout << "ERROR: Failed to parse 'NF3' (case insensitive)" << std::endl;
+        return 1;
+    }
+    std::cout << "Parsed 'NF3' (case insensitive): " << chess::io::move_to_string(parsed_nf3_upper) << std::endl;
+
+    // Parse invalid move
+    chess::Move invalid_move = board.parse_move("Ke2");
+    if (chess::move_is_valid(invalid_move)) {
+        std::cout << "ERROR: 'Ke2' should be invalid in starting position" << std::endl;
+        return 1;
+    }
+    std::cout << "Correctly rejected invalid move 'Ke2'" << std::endl;
+
+    std::cout << "Parse move tests passed!" << std::endl;
+
+    // ========================================================================
+    // Test notation type functions
+    // ========================================================================
+    std::cout << std::endl << "Testing notation type functions..." << std::endl;
+
+    // Test default notation
+    chess::set_default_notation(chess::NotationType::LongAlgebraic);
+    if (chess::default_notation() != chess::NotationType::LongAlgebraic) {
+        std::cout << "ERROR: set_default_notation failed" << std::endl;
+        return 1;
+    }
+
+    // Reset to standard algebraic
+    chess::set_default_notation(chess::NotationType::StandardAlgebraic);
+
+    // Test notation_to_string
+    std::cout << "Notation types:" << std::endl;
+    std::cout << "  " << chess::notation_to_string(chess::NotationType::StandardAlgebraic) << std::endl;
+    std::cout << "  " << chess::notation_to_string(chess::NotationType::LongAlgebraic) << std::endl;
+    std::cout << "  " << chess::notation_to_string(chess::NotationType::PureAlgebraic) << std::endl;
+    std::cout << "  " << chess::notation_to_string(chess::NotationType::ICCF) << std::endl;
+
+    std::cout << "Notation type tests passed!" << std::endl;
 
     std::cout << std::endl << "AdaChess initialization tests completed successfully!" << std::endl;
 

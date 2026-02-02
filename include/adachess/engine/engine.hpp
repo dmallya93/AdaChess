@@ -31,6 +31,7 @@
 #include "adachess/history.hpp"
 #include "adachess/hashes.hpp"
 #include "adachess/nodes.hpp"
+#include "adachess/notations.hpp"
 
 namespace chess::engine {
 
@@ -642,6 +643,40 @@ public:
      * @return The type of disambiguation required.
      */
     [[nodiscard]] AmbiguousFlag detect_ambiguous_move_notation(const Move& move);
+
+    // ========================================================================
+    // Move Parsing Methods
+    // ========================================================================
+
+    /**
+     * Parse a move from a string in any supported notation.
+     *
+     * The function generates all legal moves for the current position and
+     * attempts to match the input string against each move converted to
+     * all supported notation formats. This allows the parser to accept
+     * any notation without needing to determine the format first.
+     *
+     * @param input The move string to parse (e.g., "e4", "Nf3", "e2e4", "5254").
+     * @return The matching legal move, or kEmptyMove if no match found.
+     */
+    [[nodiscard]] Move parse_move(const std::string& input);
+
+    // ========================================================================
+    // Move List Methods
+    // ========================================================================
+
+    /**
+     * Print all legal moves for the current position to the output stream.
+     *
+     * Generates legal moves (if not already generated) and prints each move
+     * in the specified notation, separated by spaces.
+     *
+     * @param notation The notation format to use (default: current default).
+     * @param out The output stream (default: std::cout).
+     */
+    void print_moves_list(
+        NotationType notation = default_notation(),
+        std::ostream& out = std::cout);
 };
 
 // ============================================================================
