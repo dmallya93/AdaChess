@@ -25,6 +25,7 @@
 #include "adachess/pieces.hpp"
 #include "adachess/board/board.hpp"
 #include "adachess/board/directions.hpp"
+#include "adachess/board/attacks_data.hpp"
 #include "adachess/moves.hpp"
 #include "adachess/depths.hpp"
 #include "adachess/history.hpp"
@@ -413,7 +414,265 @@ public:
      * Display the piece table for debugging.
      */
     void display_piece_table() const;
+
+    // ========================================================================
+    // Attack Detection Methods
+    // ========================================================================
+
+    /**
+     * Check if a side attacks a specific square.
+     * Detects if any piece of the given side can reach that square.
+     *
+     * @param side The side to check for attacks.
+     * @param sq The target square.
+     * @return true if any piece of the side attacks the square.
+     */
+    [[nodiscard]] bool attacks(Color side, board::Square sq) const;
+
+    /**
+     * Collect all attackers of a square from a specific side.
+     *
+     * @param side The attacking side.
+     * @param sq The target square.
+     * @param only_one If true, stop after finding one attacker.
+     * @return Collection of attackers found.
+     */
+    [[nodiscard]] board::AttackCollection attacking_square(
+        Color side, board::Square sq, bool only_one) const;
+
+    /**
+     * Find all defenders of a square (pieces not pinned).
+     *
+     * @param side The defending side.
+     * @param sq The target square.
+     * @return Collection of unpinned defenders.
+     */
+    [[nodiscard]] board::AttackCollection defending_square(
+        Color side, board::Square sq) const;
+
+    // ========================================================================
+    // Check Detection Methods
+    // ========================================================================
+
+    /**
+     * Check if the king of the specified side is in check.
+     *
+     * @param side The side whose king to check.
+     * @return true if the king is in check.
+     */
+    [[nodiscard]] bool has_king_in_check(Color side) const;
+
+    /**
+     * Check if the white king is in check.
+     * @return true if white king is under attack.
+     */
+    [[nodiscard]] bool white_has_king_in_check();
+
+    /**
+     * Check if the black king is in check.
+     * @return true if black king is under attack.
+     */
+    [[nodiscard]] bool black_has_king_in_check();
+
+    // ========================================================================
+    // Pin Detection Methods
+    // ========================================================================
+
+    /**
+     * Detect the absolute pin direction for a piece on a square.
+     * The piece must not be a king.
+     *
+     * @param sq The square where the piece is located.
+     * @return The direction of the pin, or kNoDirection if not pinned.
+     */
+    [[nodiscard]] board::Direction absolute_pin_direction(board::Square sq) const;
+
+    /**
+     * Detect if a piece is absolutely pinned (from opponent's perspective).
+     *
+     * @param sq The square where the piece is located.
+     * @return The direction of the pin, or kNoDirection if not pinned.
+     */
+    [[nodiscard]] board::Direction piece_is_absolute_pinned(board::Square sq) const;
+
+    // ========================================================================
+    // Legality Testing Methods
+    // ========================================================================
+
+    /**
+     * Check if a move would leave the own king in check.
+     *
+     * @param move The move to test.
+     * @return true if the move would be illegal (king left in check).
+     */
+    [[nodiscard]] bool move_leaves_king_in_check(const Move& move);
+
+    /**
+     * Determine if/how a move checks the opponent's king.
+     *
+     * @param move The move to analyze.
+     * @return The type of check delivered.
+     */
+    [[nodiscard]] CheckType move_checks_opponent_king(const Move& move);
+
+    /**
+     * Check if the king can escape from check.
+     *
+     * @param type_of_check The current check type.
+     * @return true if at least one legal move exists.
+     */
+    [[nodiscard]] bool king_has_escapes(CheckType type_of_check);
+
+    // ========================================================================
+    // Move Registration Methods
+    // ========================================================================
+
+    /**
+     * Register a move from source to destination.
+     * Creates a standard move and adds it to the stack.
+     *
+     * @param from Source square.
+     * @param to Destination square.
+     */
+    void register_move(board::Square from, board::Square to);
+
+    /**
+     * Register a move with a specific flag.
+     * Handles promotions by generating all 4 promotion moves.
+     *
+     * @param from Source square.
+     * @param to Destination square.
+     * @param flag Move flag.
+     */
+    void register_move(board::Square from, board::Square to, MoveFlag flag);
+
+    /**
+     * Register a fully constructed move.
+     * Performs legality test and adds check information.
+     *
+     * @param move The move to register.
+     */
+    void register_move(const Move& move);
+
+    /**
+     * Register a tactical move (only if it's tactical).
+     *
+     * @param from Source square.
+     * @param to Destination square.
+     */
+    void register_tactical_move(board::Square from, board::Square to);
+
+    /**
+     * Register a tactical move with flag (only if it's tactical).
+     *
+     * @param from Source square.
+     * @param to Destination square.
+     * @param flag Move flag.
+     */
+    void register_tactical_move(board::Square from, board::Square to, MoveFlag flag);
+
+    /**
+     * Register a tactical move (only if it's tactical).
+     *
+     * @param move The move to register.
+     */
+    void register_tactical_move(const Move& move);
+
+    // ========================================================================
+    // Move Generation Methods
+    // ========================================================================
+
+    /**
+     * Generate all legal moves from the current position.
+     * Populates the move stack at the current ply.
+     */
+    void generate_moves();
+
+    /**
+     * Generate legal moves when the king is in check.
+     * Optimized for check evasion scenarios.
+     */
+    void generate_check_evasion();
+
+    /**
+     * Generate tactical moves (captures, checks, promotions).
+     * Used for quiescence search.
+     */
+    void generate_tactical_moves();
+
+    /**
+     * Generate capture moves only.
+     */
+    void generate_captures();
+
+    /**
+     * Generate moves to a specific target square.
+     * Used for static exchange evaluation.
+     *
+     * @param target The target square.
+     */
+    void generate_see_moves(board::Square target);
+
+    /**
+     * Generate SEE check evasion moves to a target square.
+     *
+     * @param see_target The SEE target square.
+     */
+    void generate_see_check_evasion(board::Square see_target);
+
+    // ========================================================================
+    // Move History Methods
+    // ========================================================================
+
+    /**
+     * Get the last move made on the chessboard.
+     *
+     * @return The last move, or an empty move if no moves played.
+     */
+    [[nodiscard]] Move last_move_made() const;
+
+    // ========================================================================
+    // Ambiguous Notation Detection
+    // ========================================================================
+
+    /**
+     * Detect if a move requires disambiguation in algebraic notation.
+     *
+     * @param move The move to check.
+     * @return The type of disambiguation required.
+     */
+    [[nodiscard]] AmbiguousFlag detect_ambiguous_move_notation(const Move& move);
 };
+
+// ============================================================================
+// Move Classification Functions
+// ============================================================================
+
+/**
+ * Check if a move is tactical (check, capture, promotion, castle).
+ * Matches Ada's Move_Is_Tactical function.
+ *
+ * @param move The move to check.
+ * @return true if the move is tactical.
+ */
+[[nodiscard]] inline bool move_is_tactical(const Move& move) noexcept {
+    return move.check != CheckType::NoCheck ||
+           move.captured != Piece::Empty ||
+           move.flag == MoveFlag::CaptureEnPassant ||
+           move.promotion != Piece::Empty ||
+           move.flag == MoveFlag::Castle;
+}
+
+/**
+ * Check if a move is quiet (not tactical).
+ * Matches Ada's Move_Is_Quiet function.
+ *
+ * @param move The move to check.
+ * @return true if the move is quiet.
+ */
+[[nodiscard]] inline bool move_is_quiet(const Move& move) noexcept {
+    return !move_is_tactical(move);
+}
 
 // ============================================================================
 // Utility Functions
