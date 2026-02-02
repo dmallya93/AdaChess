@@ -6,6 +6,8 @@ add_executable(adachess
 
 target_link_libraries(adachess PRIVATE
     adachess_core
+    adachess_libs
+    adachess_io
 )
 
 # Set output name

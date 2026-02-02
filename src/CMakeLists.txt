@@ -48,11 +48,61 @@ target_include_directories(adachess_core PUBLIC
 target_compile_features(adachess_core PUBLIC cxx_std_17)
 
 # ============================================================================
+# Utility Libraries (string_lib, timers)
+# ============================================================================
+
+set(ADACHESS_LIBS_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/adachess/libs/string_lib.cpp
+)
+
+set(ADACHESS_LIBS_HEADERS
+    ${CMAKE_SOURCE_DIR}/include/adachess/libs/string_lib.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/libs/timers/timers.hpp
+)
+
+add_library(adachess_libs STATIC
+    ${ADACHESS_LIBS_SOURCES}
+    ${ADACHESS_LIBS_HEADERS}
+)
+
+target_include_directories(adachess_libs PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_features(adachess_libs PUBLIC cxx_std_17)
+
+# ============================================================================
+# I/O Library (console display, FEN, PGN)
+# ============================================================================
+
+set(ADACHESS_IO_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/adachess/io/consoles.cpp
+)
+
+set(ADACHESS_IO_HEADERS
+    ${CMAKE_SOURCE_DIR}/include/adachess/io/consoles.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/info.hpp
+)
+
+add_library(adachess_io STATIC
+    ${ADACHESS_IO_SOURCES}
+    ${ADACHESS_IO_HEADERS}
+)
+
+target_include_directories(adachess_io PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(adachess_io PUBLIC
+    adachess_core
+)
+
+target_compile_features(adachess_io PUBLIC cxx_std_17)
+
+# ============================================================================
 # Future Library Targets (to be added in subsequent milestones)
 # ============================================================================
-# - adachess_io: I/O utilities (FEN, PGN, console display)
 # - adachess_protocols: Protocol handlers (Winboard/Xboard)
-# - adachess_libs: Utility libraries (string_lib, timers)
 
 # ============================================================================
 # Main Executable

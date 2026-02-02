@@ -25,12 +25,24 @@
 #include "adachess/board/attacks_data.hpp"
 #include "adachess/engine/engine.hpp"
 
+// Include new utility headers
+#include "adachess/libs/string_lib.hpp"
+#include "adachess/libs/timers/timers.hpp"
+#include "adachess/info.hpp"
+#include "adachess/io/consoles.hpp"
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     // Initialize attack tables at startup
     chess::board::preload_sliding_direction();
     chess::board::initialize_attacks_dispatch_table();
 
-    std::cout << "AdaChess - Smart Chess Engine" << std::endl;
+    // Display engine info
+    std::cout << chess::info::console_logo() << std::endl;
+    std::cout << chess::info::engine_name() << " " << chess::info::version()
+              << " - " << chess::info::engine_motto() << std::endl;
+    std::cout << "Author: " << chess::info::author() << std::endl;
+    std::cout << "Email: " << chess::info::e_mail() << std::endl;
+    std::cout << "Website: " << chess::info::site() << std::endl;
     std::cout << std::endl;
 
     // Basic type verification
@@ -145,6 +157,126 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     }
 
     std::cout << "Reset checks passed!" << std::endl;
+
+    // ========================================================================
+    // Test string_lib utilities
+    // ========================================================================
+    std::cout << std::endl << "Testing string_lib utilities..." << std::endl;
+
+    // Test count_tokens
+    if (string_lib::count_tokens("one two three", ' ') != 3) {
+        std::cout << "ERROR: count_tokens failed" << std::endl;
+        return 1;
+    }
+
+    // Test count_tokens with multiple delimiters
+    if (string_lib::count_tokens("one  two   three", ' ') != 3) {
+        std::cout << "ERROR: count_tokens with multiple delimiters failed" << std::endl;
+        return 1;
+    }
+
+    // Test has_token
+    if (!string_lib::has_token("hello world")) {
+        std::cout << "ERROR: has_token failed" << std::endl;
+        return 1;
+    }
+
+    // Test has_token on empty string
+    if (string_lib::has_token("   ")) {
+        std::cout << "ERROR: has_token on whitespace-only string should return false" << std::endl;
+        return 1;
+    }
+
+    // Test extract_token
+    if (string_lib::extract_token("hello world") != "hello") {
+        std::cout << "ERROR: extract_token failed" << std::endl;
+        return 1;
+    }
+
+    // Test extract_last_token
+    if (string_lib::extract_last_token("hello world") != "world") {
+        std::cout << "ERROR: extract_last_token failed" << std::endl;
+        return 1;
+    }
+
+    // Test extract_token_at
+    if (string_lib::extract_token_at("one two three", 2, ' ') != "two") {
+        std::cout << "ERROR: extract_token_at failed" << std::endl;
+        return 1;
+    }
+
+    // Test trim
+    if (string_lib::trim("  hello  ") != "hello") {
+        std::cout << "ERROR: trim both failed" << std::endl;
+        return 1;
+    }
+    if (string_lib::trim("  hello  ", ' ', string_lib::TrimSide::Left) != "hello  ") {
+        std::cout << "ERROR: trim left failed" << std::endl;
+        return 1;
+    }
+    if (string_lib::trim("  hello  ", ' ', string_lib::TrimSide::Right) != "  hello") {
+        std::cout << "ERROR: trim right failed" << std::endl;
+        return 1;
+    }
+
+    // Test index_of
+    if (string_lib::index_of("hello world", ' ') != 5) {
+        std::cout << "ERROR: index_of failed" << std::endl;
+        return 1;
+    }
+
+    // Test replace
+    std::string test_str = "hello-world";
+    string_lib::replace(test_str, '-', '_');
+    if (test_str != "hello_world") {
+        std::cout << "ERROR: replace failed" << std::endl;
+        return 1;
+    }
+
+    // Test is_empty
+    if (!string_lib::is_empty("")) {
+        std::cout << "ERROR: is_empty on empty string failed" << std::endl;
+        return 1;
+    }
+    if (!string_lib::is_empty("   ")) {
+        std::cout << "ERROR: is_empty on whitespace string failed" << std::endl;
+        return 1;
+    }
+    if (string_lib::is_empty("hello")) {
+        std::cout << "ERROR: is_empty on non-empty string failed" << std::endl;
+        return 1;
+    }
+
+    std::cout << "String library tests passed!" << std::endl;
+
+    // ========================================================================
+    // Test timers types
+    // ========================================================================
+    std::cout << std::endl << "Testing timer types..." << std::endl;
+
+    // Test TimerStatus enum
+    static_assert(chess::timers::is_not_started(chess::timers::TimerStatus::NotYetStarted),
+                  "TimerStatus NotYetStarted test failed");
+    static_assert(chess::timers::is_running(chess::timers::TimerStatus::Started),
+                  "TimerStatus Started test failed");
+    static_assert(chess::timers::is_stopped(chess::timers::TimerStatus::Stopped),
+                  "TimerStatus Stopped test failed");
+
+    chess::timers::TimerStatus status = chess::timers::TimerStatus::NotYetStarted;
+    if (!chess::timers::is_not_started(status)) {
+        std::cout << "ERROR: TimerStatus runtime test failed" << std::endl;
+        return 1;
+    }
+
+    std::cout << "Timer types tests passed!" << std::endl;
+
+    // ========================================================================
+    // Test console display
+    // ========================================================================
+    std::cout << std::endl << "Testing console display..." << std::endl;
+    board.initialize();  // Re-initialize the board
+    std::cout << "Initial position:" << std::endl;
+    chess::io::consoles::display_on_console(board);
 
     std::cout << std::endl << "AdaChess initialization tests completed successfully!" << std::endl;
 
