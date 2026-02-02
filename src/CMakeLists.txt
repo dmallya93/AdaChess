@@ -10,6 +10,7 @@ set(ADACHESS_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/score.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/hashes.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/board/board.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/adachess/board/attacks_data.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/moves.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/engine/engine.cpp
 )
@@ -29,6 +30,7 @@ set(ADACHESS_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/adachess/moves.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/board.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/directions.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/board/attacks_data.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/engine/engine.hpp
 )
 
