@@ -3393,4 +3393,593 @@ void Chessboard::print_moves_list(NotationType notation, std::ostream& out) {
     out << "\n";
 }
 
+// ============================================================================
+// Play/Undo Move Implementation
+// ============================================================================
+
+void Chessboard::play(const Move& move) {
+    board::Square from = move.from;
+    board::Square to = move.to;
+    Piece piece = move.piece;
+    Piece captured = move.captured;
+    Piece promote = move.promotion;
+    MoveFlag flag = move.flag;
+
+    // Store data to undo this move
+    HistoryMove history_data(move, g_hash, fifty);
+
+    // Prepare data for the next ply
+    en_passant[history_ply + 1] = board::kNoEnPassant;
+    fifty = fifty + 1;
+    white_castle_kingside[history_ply + 1] = white_castle_kingside[history_ply];
+    white_castle_queenside[history_ply + 1] = white_castle_queenside[history_ply];
+    black_castle_kingside[history_ply + 1] = black_castle_kingside[history_ply];
+    black_castle_queenside[history_ply + 1] = black_castle_queenside[history_ply];
+
+    // Handle castle
+    if (flag == MoveFlag::Castle) {
+        board::Square rook_from, rook_to;
+        if (to == board::G1) {
+            // White kingside castle
+            rook_from = board::H1;
+            rook_to = board::F1;
+            update_white_piece(board::H1, board::F1);
+            white_castle_kingside[history_ply + 1] = false;
+        } else if (to == board::C1) {
+            // White queenside castle
+            rook_from = board::A1;
+            rook_to = board::D1;
+            update_white_piece(board::A1, board::D1);
+            white_castle_queenside[history_ply + 1] = false;
+        } else if (to == board::G8) {
+            // Black kingside castle
+            rook_from = board::H8;
+            rook_to = board::F8;
+            update_black_piece(board::H8, board::F8);
+            black_castle_kingside[history_ply + 1] = false;
+        } else if (to == board::C8) {
+            // Black queenside castle
+            rook_from = board::A8;
+            rook_to = board::D8;
+            update_black_piece(board::A8, board::D8);
+            black_castle_queenside[history_ply + 1] = false;
+        } else {
+            // Invalid castle move - should not happen
+            assert(false && "Invalid castle destination");
+            return;
+        }
+        square[rook_to] = square[rook_from];
+        square[rook_from] = Piece::Empty;
+    }
+
+    // Detect the en-passant square, if any
+    if (flag == MoveFlag::PawnMoveTwoSquares) {
+        if (side_to_move == Color::White) {
+            en_passant[history_ply + 1] = to + board::kSouth;
+        } else {
+            en_passant[history_ply + 1] = to + board::kNorth;
+        }
+    }
+
+    // Remove the captured piece, if any
+    if (captured != Piece::Empty) {
+        if (side_to_move == Color::White) {
+            delete_black_piece(to);
+        } else {
+            delete_white_piece(to);
+        }
+    } else if (flag == MoveFlag::CaptureEnPassant) {
+        fifty = 0;
+        if (side_to_move == Color::White) {
+            delete_black_piece(to + board::kSouth);
+            square[to + board::kSouth] = Piece::Empty;
+        } else {
+            delete_white_piece(to + board::kNorth);
+            square[to + board::kNorth] = Piece::Empty;
+        }
+    }
+
+    // Move the piece in the square
+    square[to] = square[from];
+    square[from] = Piece::Empty;
+
+    // Update the other data involved into the move
+    if (side_to_move == Color::White) {
+        update_white_piece(from, to);
+
+        if (square[to] == Piece::WhiteKing) {
+            white_king_position = to;
+            white_castle_kingside[history_ply + 1] = false;
+            white_castle_queenside[history_ply + 1] = false;
+        }
+
+        if (flag == MoveFlag::Promotion) {
+            if (is_black_piece(square[to])) {
+                delete_black_piece(to);
+            }
+            square[to] = promote;
+        }
+    } else {
+        update_black_piece(from, to);
+
+        if (square[to] == Piece::BlackKing) {
+            black_king_position = to;
+            black_castle_kingside[history_ply + 1] = false;
+            black_castle_queenside[history_ply + 1] = false;
+        }
+
+        if (flag == MoveFlag::Promotion) {
+            if (is_white_piece(square[to])) {
+                delete_white_piece(to);
+            }
+            square[to] = promote;
+        }
+    }
+
+    // Fifty moves counter
+    if (is_pawn(piece) || captured != Piece::Empty) {
+        fifty = 0;
+    }
+
+    // Castle rights - update if rook/king squares are involved
+    if (from == board::A1 || to == board::A1) {
+        white_castle_queenside[history_ply + 1] = false;
+    }
+    if (from == board::H1 || to == board::H1) {
+        white_castle_kingside[history_ply + 1] = false;
+    }
+    if (from == board::A8 || to == board::A8) {
+        black_castle_queenside[history_ply + 1] = false;
+    }
+    if (from == board::H8 || to == board::H8) {
+        black_castle_kingside[history_ply + 1] = false;
+    }
+
+    // Finally, set up the data for the next move
+    side_to_move = flip(side_to_move);
+    moves_history[history_ply] = history_data;
+    ply = ply + 1;
+    history_ply = history_ply + 1;
+
+    update_hash();
+}
+
+void Chessboard::undo() {
+    ply = ply - 1;
+    history_ply = history_ply - 1;
+    HistoryMove hmove = moves_history[history_ply];
+    fifty = static_cast<FiftyCounter>(hmove.fifty);
+
+    side_to_move = flip(side_to_move);
+
+    board::Square from = hmove.move.from;
+    board::Square to = hmove.move.to;
+    MoveFlag flag = hmove.move.flag;
+    Piece captured = hmove.move.captured;
+    g_hash = hmove.hash;
+
+    // Handle castle undo
+    if (flag == MoveFlag::Castle) {
+        board::Square rook_from, rook_to;
+        if (to == board::G1) {
+            // White kingside castle
+            rook_from = board::F1;
+            rook_to = board::H1;
+            update_white_piece(rook_from, rook_to);
+        } else if (to == board::C1) {
+            // White queenside castle
+            rook_from = board::D1;
+            rook_to = board::A1;
+            update_white_piece(rook_from, rook_to);
+        } else if (to == board::G8) {
+            // Black kingside castle
+            rook_from = board::F8;
+            rook_to = board::H8;
+            update_black_piece(rook_from, rook_to);
+        } else if (to == board::C8) {
+            // Black queenside castle
+            rook_from = board::D8;
+            rook_to = board::A8;
+            update_black_piece(rook_from, rook_to);
+        } else {
+            assert(false && "Invalid castle destination in undo");
+            return;
+        }
+        square[rook_to] = square[rook_from];
+        square[rook_from] = Piece::Empty;
+
+        // Restore original from/to from history
+        from = moves_history[history_ply].move.from;
+        to = moves_history[history_ply].move.to;
+    }
+
+    // Update piece tracking
+    if (side_to_move == Color::White) {
+        update_white_piece(to, from);
+        if (square[to] == Piece::WhiteKing) {
+            white_king_position = from;
+        }
+    } else {
+        update_black_piece(to, from);
+        if (square[to] == Piece::BlackKing) {
+            black_king_position = from;
+        }
+    }
+
+    // Move piece back to origin
+    square[from] = square[to];
+    square[to] = captured;
+
+    // Handle promotion undo
+    if (flag == MoveFlag::Promotion) {
+        if (side_to_move == Color::White) {
+            square[from] = Piece::WhitePawn;
+        } else {
+            square[from] = Piece::BlackPawn;
+        }
+    }
+
+    // Restore captured piece
+    if (captured != Piece::Empty) {
+        if (side_to_move == Color::White) {
+            add_black_piece(to);
+        } else {
+            add_white_piece(to);
+        }
+    } else if (flag == MoveFlag::CaptureEnPassant) {
+        if (side_to_move == Color::White) {
+            add_black_piece(to + board::kSouth);
+            square[to + board::kSouth] = Piece::BlackPawn;
+        } else {
+            add_white_piece(to + board::kNorth);
+            square[to + board::kNorth] = Piece::WhitePawn;
+        }
+    }
+
+    moves_history[history_ply + 1] = kEmptyHistoryMove;
+}
+
+void Chessboard::play_null_move() {
+    // Get the previous move to base null move on
+    Move null_move = moves_history[history_ply - 1].move;
+    null_move.flag = MoveFlag::NullMove;
+
+    HistoryMove history_data(null_move, g_hash, fifty);
+
+    moves_history[history_ply] = history_data;
+    en_passant[history_ply + 1] = board::kNoEnPassant;
+    fifty = fifty + 1;
+    white_castle_kingside[history_ply + 1] = white_castle_kingside[history_ply];
+    white_castle_queenside[history_ply + 1] = white_castle_queenside[history_ply];
+    black_castle_kingside[history_ply + 1] = black_castle_kingside[history_ply];
+    black_castle_queenside[history_ply + 1] = black_castle_queenside[history_ply];
+
+    side_to_move = flip(side_to_move);
+
+    ply = ply + 1;
+    history_ply = history_ply + 1;
+
+    update_hash();
+}
+
+void Chessboard::undo_null_move() {
+    ply = ply - 1;
+    history_ply = history_ply - 1;
+    fifty = fifty - 1;
+
+    side_to_move = flip(side_to_move);
+
+    moves_history[history_ply + 1] = kEmptyHistoryMove;
+}
+
+void Chessboard::play_check_move(const Move& move) {
+    board::Square from = move.from;
+    board::Square to = move.to;
+    Piece captured = move.captured;
+    Piece promote = move.promotion;
+    MoveFlag flag = move.flag;
+
+    HistoryMove tmp(move, g_hash, fifty);
+
+    // Prepare data for the next ply
+    en_passant[history_ply + 1] = board::kNoEnPassant;
+
+    // Handle castle
+    if (flag == MoveFlag::Castle) {
+        board::Square rook_from, rook_to;
+        if (to == board::G1) {
+            rook_from = board::H1;
+            rook_to = board::F1;
+            update_white_piece(board::H1, board::F1);
+            white_castle_kingside[history_ply + 1] = false;
+        } else if (to == board::C1) {
+            rook_from = board::A1;
+            rook_to = board::D1;
+            update_white_piece(board::A1, board::D1);
+            white_castle_queenside[history_ply + 1] = false;
+        } else if (to == board::G8) {
+            rook_from = board::H8;
+            rook_to = board::F8;
+            update_black_piece(board::H8, board::F8);
+            black_castle_kingside[history_ply + 1] = false;
+        } else if (to == board::C8) {
+            rook_from = board::A8;
+            rook_to = board::D8;
+            update_black_piece(board::A8, board::D8);
+            black_castle_queenside[history_ply + 1] = false;
+        } else {
+            assert(false && "Invalid castle destination");
+            return;
+        }
+        square[rook_to] = square[rook_from];
+        square[rook_from] = Piece::Empty;
+        // Restore original from/to positions
+        from = move.from;
+        to = move.to;
+    }
+
+    // Detect the en-passant square, if any
+    if (flag == MoveFlag::PawnMoveTwoSquares) {
+        if (side_to_move == Color::White) {
+            en_passant[history_ply + 1] = to + board::kSouth;
+        } else {
+            en_passant[history_ply + 1] = to + board::kNorth;
+        }
+    }
+
+    // Remove the captured piece, if any
+    if (captured != Piece::Empty) {
+        if (side_to_move == Color::White) {
+            delete_black_piece(to);
+        } else {
+            delete_white_piece(to);
+        }
+    } else if (flag == MoveFlag::CaptureEnPassant) {
+        if (side_to_move == Color::White) {
+            delete_black_piece(to + board::kSouth);
+            square[to + board::kSouth] = Piece::Empty;
+        } else {
+            delete_white_piece(to + board::kNorth);
+            square[to + board::kNorth] = Piece::Empty;
+        }
+    }
+
+    // Move the piece in the square
+    square[to] = square[from];
+    square[from] = Piece::Empty;
+
+    // Update the other data involved into the move
+    if (side_to_move == Color::White) {
+        update_white_piece(from, to);
+
+        if (square[to] == Piece::WhiteKing) {
+            white_king_position = to;
+        }
+
+        if (flag == MoveFlag::Promotion) {
+            if (is_black_piece(square[to])) {
+                delete_black_piece(to);
+            }
+            square[to] = promote;
+        }
+    } else {
+        update_black_piece(from, to);
+
+        if (square[to] == Piece::BlackKing) {
+            black_king_position = to;
+        }
+
+        if (flag == MoveFlag::Promotion) {
+            if (is_white_piece(square[to])) {
+                delete_white_piece(to);
+            }
+            square[to] = promote;
+        }
+    }
+
+    // Finally, set up the data for the next move
+    side_to_move = flip(side_to_move);
+    moves_history[history_ply] = tmp;
+    ply = ply + 1;
+    history_ply = history_ply + 1;
+}
+
+void Chessboard::undo_check_move() {
+    ply = ply - 1;
+    history_ply = history_ply - 1;
+    HistoryMove hmove = moves_history[history_ply];
+
+    side_to_move = flip(side_to_move);
+
+    board::Square from = hmove.move.from;
+    board::Square to = hmove.move.to;
+    MoveFlag flag = hmove.move.flag;
+    Piece captured = hmove.move.captured;
+
+    // Handle castle undo
+    if (flag == MoveFlag::Castle) {
+        board::Square rook_from, rook_to;
+        if (to == board::G1) {
+            rook_from = board::F1;
+            rook_to = board::H1;
+            update_white_piece(rook_from, rook_to);
+        } else if (to == board::C1) {
+            rook_from = board::D1;
+            rook_to = board::A1;
+            update_white_piece(rook_from, rook_to);
+        } else if (to == board::G8) {
+            rook_from = board::F8;
+            rook_to = board::H8;
+            update_black_piece(rook_from, rook_to);
+        } else if (to == board::C8) {
+            rook_from = board::D8;
+            rook_to = board::A8;
+            update_black_piece(rook_from, rook_to);
+        } else {
+            assert(false && "Invalid castle destination in undo");
+            return;
+        }
+        square[rook_to] = square[rook_from];
+        square[rook_from] = Piece::Empty;
+
+        from = moves_history[history_ply].move.from;
+        to = moves_history[history_ply].move.to;
+    }
+
+    if (side_to_move == Color::White) {
+        update_white_piece(to, from);
+        if (square[to] == Piece::WhiteKing) {
+            white_king_position = from;
+        }
+    } else {
+        update_black_piece(to, from);
+        if (square[to] == Piece::BlackKing) {
+            black_king_position = from;
+        }
+    }
+
+    square[from] = square[to];
+    square[to] = captured;
+
+    if (flag == MoveFlag::Promotion) {
+        if (side_to_move == Color::White) {
+            square[from] = Piece::WhitePawn;
+        } else {
+            square[from] = Piece::BlackPawn;
+        }
+    }
+
+    if (captured != Piece::Empty) {
+        if (side_to_move == Color::White) {
+            add_black_piece(to);
+        } else {
+            add_white_piece(to);
+        }
+    } else if (flag == MoveFlag::CaptureEnPassant) {
+        if (side_to_move == Color::White) {
+            add_black_piece(to + board::kSouth);
+            square[to + board::kSouth] = Piece::BlackPawn;
+        } else {
+            add_white_piece(to + board::kNorth);
+            square[to + board::kNorth] = Piece::WhitePawn;
+        }
+    }
+
+    moves_history[history_ply + 1] = kEmptyHistoryMove;
+}
+
+void Chessboard::play_see_move(const Move& move) {
+    board::Square from = move.from;
+    board::Square to = move.to;
+    Piece captured = move.captured;
+    Piece promote = move.promotion;
+    MoveFlag flag = move.flag;
+
+    HistoryMove tmp(move, g_hash, fifty);
+
+    // Prepare data for the next ply
+    en_passant[history_ply + 1] = board::kNoEnPassant;
+
+    // Detect the en-passant square, if any
+    if (flag == MoveFlag::PawnMoveTwoSquares) {
+        if (side_to_move == Color::White) {
+            en_passant[history_ply + 1] = to + board::kSouth;
+        } else {
+            en_passant[history_ply + 1] = to + board::kNorth;
+        }
+    }
+
+    // Remove the captured piece, if any
+    if (is_chess_piece(captured)) {
+        if (side_to_move == Color::White) {
+            delete_black_piece(to);
+        } else {
+            delete_white_piece(to);
+        }
+    }
+
+    // Move the piece in the square
+    square[to] = square[from];
+    square[from] = Piece::Empty;
+
+    // Update the other data involved into the move
+    if (side_to_move == Color::White) {
+        update_white_piece(from, to);
+
+        if (square[to] == Piece::WhiteKing) {
+            white_king_position = to;
+        }
+
+        if (flag == MoveFlag::Promotion) {
+            if (is_black_piece(square[to])) {
+                delete_black_piece(to);
+            }
+            square[to] = promote;
+        }
+    } else {
+        update_black_piece(from, to);
+
+        if (square[to] == Piece::BlackKing) {
+            black_king_position = to;
+        }
+
+        if (flag == MoveFlag::Promotion) {
+            if (is_white_piece(square[to])) {
+                delete_white_piece(to);
+            }
+            square[to] = promote;
+        }
+    }
+
+    // Finally, set up the data for the next move
+    side_to_move = flip(side_to_move);
+    moves_history[history_ply] = tmp;
+    ply = ply + 1;
+    history_ply = history_ply + 1;
+}
+
+void Chessboard::undo_see_move() {
+    ply = ply - 1;
+    history_ply = history_ply - 1;
+    HistoryMove hmove = moves_history[history_ply];
+
+    side_to_move = flip(side_to_move);
+
+    board::Square from = hmove.move.from;
+    board::Square to = hmove.move.to;
+    MoveFlag flag = hmove.move.flag;
+    Piece captured = hmove.move.captured;
+
+    if (side_to_move == Color::White) {
+        update_white_piece(to, from);
+        if (square[to] == Piece::WhiteKing) {
+            white_king_position = from;
+        }
+    } else {
+        update_black_piece(to, from);
+        if (square[to] == Piece::BlackKing) {
+            black_king_position = from;
+        }
+    }
+
+    square[from] = square[to];
+    square[to] = captured;
+
+    if (flag == MoveFlag::Promotion) {
+        if (side_to_move == Color::White) {
+            square[from] = Piece::WhitePawn;
+        } else {
+            square[from] = Piece::BlackPawn;
+        }
+    }
+
+    if (side_to_move == Color::White) {
+        add_black_piece(to);
+    } else {
+        add_white_piece(to);
+    }
+
+    moves_history[history_ply + 1] = kEmptyHistoryMove;
+}
+
 } // namespace chess::engine

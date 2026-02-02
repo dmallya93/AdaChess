@@ -622,6 +622,66 @@ public:
     void generate_see_check_evasion(board::Square see_target);
 
     // ========================================================================
+    // Play/Undo Move Methods
+    // ========================================================================
+
+    /**
+     * Apply a move to the board.
+     * Updates all state: board array, piece tracking, castling rights,
+     * en passant, fifty-move counter, ply, side to move, and hash.
+     *
+     * @param move The move to apply.
+     */
+    void play(const Move& move);
+
+    /**
+     * Undo the last move.
+     * Restores all state from the move history.
+     */
+    void undo();
+
+    /**
+     * Play a null move (pass).
+     * Used in null-move pruning. Switches side without moving pieces.
+     */
+    void play_null_move();
+
+    /**
+     * Undo a null move.
+     * Reverses the null move operation.
+     */
+    void undo_null_move();
+
+    /**
+     * Play a move for check detection (lightweight version).
+     * Skips fifty-move and some castling updates.
+     * Used for mate detection where full state isn't needed.
+     *
+     * @param move The move to apply.
+     */
+    void play_check_move(const Move& move);
+
+    /**
+     * Undo a check move (lightweight version).
+     * Reverses play_check_move.
+     */
+    void undo_check_move();
+
+    /**
+     * Play a move for SEE (static exchange evaluation).
+     * Minimal updates for SEE calculations.
+     *
+     * @param move The move to apply.
+     */
+    void play_see_move(const Move& move);
+
+    /**
+     * Undo a SEE move.
+     * Reverses play_see_move.
+     */
+    void undo_see_move();
+
+    // ========================================================================
     // Move History Methods
     // ========================================================================
 
