@@ -19,12 +19,9 @@
 #include <cstdint>
 
 #include "adachess/hashes.hpp"
+#include "adachess/moves.hpp"
 
 namespace chess {
-
-// Forward declaration for Move type (defined in moves.hpp)
-// This will be properly included when moves.hpp is implemented
-struct Move;
 
 /**
  * History move structure for tracking game history.
@@ -34,17 +31,12 @@ struct Move;
  * - The move that was played
  * - The position hash before or after the move
  * - The fifty-move rule counter at that point
- *
- * Note: The Move type is forward declared. Full definition will be
- * available when moves.hpp is implemented in a subsequent task.
  */
 struct HistoryMove {
     /**
      * The move that was played.
-     * Note: This uses a pointer to forward-declared Move type.
-     * Will be replaced with actual Move type when moves.hpp is available.
      */
-    // Move move;  // TODO: Uncomment when Move type is available
+    Move move{};
 
     /**
      * Position hash for detecting repetitions.
@@ -63,7 +55,17 @@ struct HistoryMove {
     constexpr HistoryMove() noexcept = default;
 
     /**
-     * Constructor with hash and fifty-move counter.
+     * Constructor with move, hash and fifty-move counter.
+     *
+     * @param m The move that was played.
+     * @param h The position hash.
+     * @param f The fifty-move counter.
+     */
+    constexpr HistoryMove(Move m, Hash h, std::uint16_t f) noexcept
+        : move(m), hash(h), fifty(f) {}
+
+    /**
+     * Constructor with hash and fifty-move counter (for backward compatibility).
      *
      * @param h The position hash.
      * @param f The fifty-move counter.
@@ -80,9 +82,7 @@ inline constexpr HistoryMove kEmptyHistoryMove{};
 
 /**
  * Equality comparison for history moves.
- * Note: Ada's implementation only compares the Move field.
- * This simplified version compares hash and fifty counter.
- * When Move type is available, this should be updated to compare moves.
+ * Ada's implementation compares only the Move field.
  *
  * @param lhs Left-hand side history move.
  * @param rhs Right-hand side history move.
@@ -90,9 +90,7 @@ inline constexpr HistoryMove kEmptyHistoryMove{};
  */
 [[nodiscard]] constexpr bool operator==(const HistoryMove& lhs,
                                          const HistoryMove& rhs) noexcept {
-    // TODO: When Move type is available, compare moves instead:
-    // return lhs.move == rhs.move;
-    return lhs.hash == rhs.hash && lhs.fifty == rhs.fifty;
+    return lhs.move == rhs.move;
 }
 
 /**

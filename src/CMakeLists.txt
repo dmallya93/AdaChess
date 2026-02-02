@@ -4,13 +4,14 @@
 # Core Library - Foundation Types
 # ============================================================================
 
-# Core type system sources (colors, pieces, score, hashes, board, moves, etc.)
+# Core type system sources (colors, pieces, score, hashes, board, moves, engine, etc.)
 set(ADACHESS_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/pieces.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/score.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/hashes.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/board/board.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/moves.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/adachess/engine/engine.cpp
 )
 
 # Core type system headers
@@ -28,6 +29,7 @@ set(ADACHESS_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/adachess/moves.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/board.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/directions.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/engine/engine.hpp
 )
 
 # Create the core library (static library with implementation files)
