@@ -1428,7 +1428,7 @@ void fill_knight_distance_table() {
         for (const auto offset : kKnightOffsets) {
             Square target = from + offset;
             if (!is_frame(target)) {
-                Distance d;
+                Distance d = kUnreachable;  // Initialize to avoid compiler warning
                 switch (visited[target.to_index()][to.to_index()]) {
                     case VisitStatus::Complete:
                         d = static_cast<Distance>(1 + g_knight_distance_table[target.to_index()][to.to_index()]);
