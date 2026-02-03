@@ -17,6 +17,7 @@ set(ADACHESS_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/io/io.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/engine/engine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/engine/perfts.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/adachess/engine/see.cpp
 )
 
 # Core type system headers
@@ -32,13 +33,16 @@ set(ADACHESS_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/adachess/pins.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/history.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/moves.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/moves/annotations.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/notations.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/players.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/io/io.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/board.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/directions.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/attacks_data.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/engine/engine.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/engine/perfts.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/engine/see.hpp
 )
 
 # Create the core library (static library with implementation files)
@@ -84,10 +88,12 @@ target_compile_features(adachess_libs PUBLIC cxx_std_17)
 
 set(ADACHESS_IO_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/io/consoles.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/adachess/io/fen.cpp
 )
 
 set(ADACHESS_IO_HEADERS
     ${CMAKE_SOURCE_DIR}/include/adachess/io/consoles.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/io/fen.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/info.hpp
 )
 
@@ -102,6 +108,7 @@ target_include_directories(adachess_io PUBLIC
 
 target_link_libraries(adachess_io PUBLIC
     adachess_core
+    adachess_libs
 )
 
 target_compile_features(adachess_io PUBLIC cxx_std_17)

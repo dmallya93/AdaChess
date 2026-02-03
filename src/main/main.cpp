@@ -33,6 +33,7 @@
 #include "adachess/info.hpp"
 #include "adachess/io/consoles.hpp"
 #include "adachess/io/io.hpp"
+#include "adachess/io/fen.hpp"
 
 namespace {
 
@@ -75,6 +76,8 @@ void print_help() {
               << "  play <move>, p   - Make a move (e.g., 'play e4' or 'p Nf3')\n"
               << "  undo, u          - Take back the last move\n"
               << "  new              - Start a new game\n"
+              << "  setboard <fen>   - Set position from FEN string\n"
+              << "  getfen           - Get FEN string for current position\n"
               << "  perft <depth>    - Run perft to the specified depth (1-10)\n"
               << "  divide <depth>   - Run divide to the specified depth (0-10)\n"
               << "  notation [type]  - Show or set notation (san, lan, winboard, iccf)\n"
@@ -85,6 +88,8 @@ void print_help() {
               << "\nPerft testing:\n"
               << "  perft 5          - Count all positions at depth 5 with statistics\n"
               << "  divide 5         - Show perft counts for each first move\n"
+              << "\nFEN examples:\n"
+              << "  setboard rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1\n"
               << "\n";
 }
 
@@ -335,6 +340,26 @@ int main(int argc, char* argv[]) {
             board.initialize();
             std::cout << "New game started.\n";
             chess::io::consoles::display_on_console(board);
+
+        } else if (command == "setboard") {
+            // Set board from FEN string
+            if (parameter.empty()) {
+                std::cout << "Error: Please provide a FEN string. Usage: setboard <fen>\n";
+                std::cout << "Example: setboard rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1\n";
+            } else {
+                try {
+                    chess::io::fen::from_string(board, parameter);
+                    std::cout << "Position set from FEN.\n";
+                    chess::io::consoles::display_on_console(board);
+                } catch (const chess::io::fen::InvalidFen& e) {
+                    std::cout << "Error: " << e.what() << "\n";
+                }
+            }
+
+        } else if (command == "getfen" || command == "fen") {
+            // Get FEN string for current position
+            std::string fen = chess::io::fen::to_string(board);
+            std::cout << "FEN: " << fen << "\n";
 
         } else if (command == "usage" || command == "about") {
             // Usage/about command
