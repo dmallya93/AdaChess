@@ -37,10 +37,8 @@ namespace {
     const Chessboard& chessboard,
     board::Square square
 ) noexcept {
-    Piece attacker = chessboard.square[square];
-
-    // King cannot be pinned
-    assert(!is_king(attacker) && "Bug! King cannot be pinned");
+    // King cannot be pinned - assert in debug builds
+    assert(!is_king(chessboard.square[square]) && "Bug! King cannot be pinned");
 
     return chessboard.piece_is_absolute_pinned(square) == board::kNoDirection;
 }

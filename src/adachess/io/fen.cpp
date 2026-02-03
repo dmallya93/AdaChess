@@ -451,8 +451,12 @@ std::string to_string(const engine::Chessboard& chessboard) {
         fen << '-';
     }
 
-    // Note: The Ada implementation comments out the fifty-move counter and fullmove number
-    // but we include them for completeness
+    // Output fifty-move counter (halfmove clock)
+    fen << ' ' << static_cast<int>(chessboard.fifty);
+
+    // Output fullmove number (starts at 1, increments after Black's move)
+    // fullmove = (history_ply / 2) + 1
+    fen << ' ' << ((chessboard.history_ply / 2) + 1);
 
     return fen.str();
 }

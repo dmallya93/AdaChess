@@ -1,7 +1,7 @@
 /**
  * AdaChess - Smart Chess Engine
  *
- * Player type definitions for identifying human vs engine players.
+ * Player type definitions.
  * C++ port of the original Ada implementation (chess-players.ads).
  *
  * Original Copyright (C) 2013-2023 - Alessandro Iavicoli
@@ -18,74 +18,33 @@
 
 #include <cstdint>
 
-namespace chess::players {
-
-// ============================================================================
-// Player Type
-// ============================================================================
+namespace chess {
+namespace players {
 
 /**
- * Player type enumeration to distinguish between human and engine players.
+ * Player type enumeration.
  *
- * This type is used by:
- * - Protocol handlers to distinguish between human and engine players
- * - Game management to determine who is to move
- * - Analysis features for annotating games
+ * Distinguishes between human and engine players, which affects
+ * how the chess engine interacts during play (e.g., time management,
+ * protocol handling).
  *
- * Corresponds to Ada's Player_Type enumeration with:
- * - Size => 2 (2 bits)
- * - Default_Value => Human
+ * Uses explicit underlying type std::uint8_t to minimize storage,
+ * matching Ada's Size => 2 specification.
  *
- * The underlying type std::uint8_t is the smallest standard integer type
- * that can hold 2 bits.
+ * Default value is Human, matching Ada's Default_Value => Human.
  */
 enum class PlayerType : std::uint8_t {
-    Human = 0,   // Human player
-    Engine = 1   // Computer/engine player
+    Human = 0,   ///< Human player (default)
+    Engine = 1   ///< Computer engine player
 };
 
 /**
- * Default player type (Human), matching Ada's Default_Value specification.
+ * Default player type (Human).
+ * Matches Ada's Default_Value => Human specification.
  */
-inline constexpr PlayerType kDefaultPlayer = PlayerType::Human;
+inline constexpr PlayerType kDefaultPlayerType = PlayerType::Human;
 
-// ============================================================================
-// Player Type Utility Functions
-// ============================================================================
-
-/**
- * Check if a player is a human.
- * @param player The player type to check.
- * @return true if the player is human.
- */
-[[nodiscard]] constexpr bool is_human(PlayerType player) noexcept {
-    return player == PlayerType::Human;
-}
-
-/**
- * Check if a player is an engine.
- * @param player The player type to check.
- * @return true if the player is an engine.
- */
-[[nodiscard]] constexpr bool is_engine(PlayerType player) noexcept {
-    return player == PlayerType::Engine;
-}
-
-/**
- * Convert a PlayerType to its string representation.
- * @param player The player type.
- * @return A human-readable string describing the player type.
- */
-[[nodiscard]] inline const char* player_to_string(PlayerType player) noexcept {
-    switch (player) {
-        case PlayerType::Human:
-            return "Human";
-        case PlayerType::Engine:
-            return "Engine";
-    }
-    return "Unknown";
-}
-
-} // namespace chess::players
+} // namespace players
+} // namespace chess
 
 #endif // ADACHESS_PLAYERS_HPP
