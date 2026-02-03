@@ -32,7 +32,9 @@ set(ADACHESS_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/adachess/pins.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/history.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/moves.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/moves/annotations.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/notations.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/players.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/io/io.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/board.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/board/directions.hpp
