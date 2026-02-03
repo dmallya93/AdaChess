@@ -16,6 +16,8 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
+#include <vector>
+#include <utility>
 
 // Core type headers
 #include "adachess/chess.hpp"
@@ -27,6 +29,8 @@
 #include "adachess/board/attacks_data.hpp"
 #include "adachess/engine/engine.hpp"
 #include "adachess/engine/perfts.hpp"
+#include "adachess/engine/see.hpp"
+#include "adachess/engine/evaluations/static_evaluations.hpp"
 
 // Utility headers
 #include "adachess/libs/string_lib.hpp"
@@ -78,6 +82,9 @@ void print_help() {
               << "  new              - Start a new game\n"
               << "  setboard <fen>   - Set position from FEN string\n"
               << "  getfen           - Get FEN string for current position\n"
+              << "  eval             - Evaluate the current position\n"
+              << "  evalall          - Evaluate all legal moves from current position\n"
+              << "  seetest          - Run SEE (Static Exchange Evaluation) on all moves\n"
               << "  perft <depth>    - Run perft to the specified depth (1-10)\n"
               << "  divide <depth>   - Run divide to the specified depth (0-10)\n"
               << "  notation [type]  - Show or set notation (san, lan, winboard, iccf)\n"
@@ -88,6 +95,10 @@ void print_help() {
               << "\nPerft testing:\n"
               << "  perft 5          - Count all positions at depth 5 with statistics\n"
               << "  divide 5         - Show perft counts for each first move\n"
+              << "\nEvaluation:\n"
+              << "  eval             - Show static evaluation score for current position\n"
+              << "  evalall          - Show evaluation score for each legal move\n"
+              << "  seetest          - Show SEE analysis for all moves (winning/equal/losing)\n"
               << "\nFEN examples:\n"
               << "  setboard rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1\n"
               << "\n";
@@ -200,6 +211,11 @@ int main(int argc, char* argv[]) {
     // ========================================================================
     chess::board::preload_sliding_direction();
     chess::board::initialize_attacks_dispatch_table();
+
+    // ========================================================================
+    // Initialize the evaluation engine
+    // ========================================================================
+    chess::engine::evaluations::initialize_evaluation_engine();
 
     // ========================================================================
     // Create and initialize the chessboard
@@ -389,6 +405,106 @@ int main(int argc, char* argv[]) {
                 }
             }
 
+        } else if (command == "eval") {
+            // Eval command - evaluate the current position
+            chess::engine::evaluations::Evaluation eval =
+                chess::engine::evaluations::evaluate(board);
+            std::cout << "Evaluation: " << eval.score << " centipawns\n";
+
+        } else if (command == "evalall") {
+            // Evalall command - evaluate all legal moves from current position
+            chess::io::consoles::display_on_console(board);
+            board.generate_moves();
+            std::size_t num_moves = board.moves_counter(board.ply);
+
+            if (num_moves == 0) {
+                std::cout << "No legal moves available.\n";
+            } else {
+                std::cout << "\nEvaluating " << num_moves << " legal moves:\n";
+                std::cout << "-----------------------------------\n";
+
+                // Collect move/score pairs for sorting
+                std::vector<std::pair<chess::Move, chess::Score>> move_scores;
+                move_scores.reserve(num_moves);
+
+                // Iterate through all legal moves
+                std::size_t first_move = board.moves_pointer[board.ply];
+                std::size_t last_move = board.moves_pointer[board.ply + 1];
+
+                for (std::size_t i = first_move; i < last_move; ++i) {
+                    chess::Move move = board.moves_stack[i];
+
+                    // Play the move
+                    board.play(move);
+
+                    // Evaluate from opponent's perspective and negate (standard convention)
+                    chess::engine::evaluations::Evaluation eval =
+                        chess::engine::evaluations::evaluate(board);
+                    chess::Score score = -eval.score;
+
+                    // Undo the move
+                    board.undo();
+
+                    // Store the move and its score
+                    move_scores.emplace_back(move, score);
+                }
+
+                // Sort by score (highest first - best moves for side to move)
+                std::sort(move_scores.begin(), move_scores.end(),
+                          [](const auto& a, const auto& b) { return a.second > b.second; });
+
+                // Display sorted moves
+                for (const auto& [move, score] : move_scores) {
+                    std::cout << chess::io::move_to_string(move, chess::default_notation())
+                              << ": score " << score << "\n";
+                }
+                std::cout << "-----------------------------------\n";
+            }
+
+        } else if (command == "seetest") {
+            // SEE test command - run Static Exchange Evaluation on all moves
+            chess::io::consoles::display_on_console(board);
+            board.generate_moves();
+            std::size_t num_moves = board.moves_counter(board.ply);
+
+            if (num_moves == 0) {
+                std::cout << "No legal moves available.\n";
+            } else {
+                std::cout << "\nSEE analysis for " << num_moves << " moves:\n";
+                std::cout << "-----------------------------------\n";
+
+                // Iterate through all legal moves
+                std::size_t first_move = board.moves_pointer[board.ply];
+                std::size_t last_move = board.moves_pointer[board.ply + 1];
+
+                for (std::size_t i = first_move; i < last_move; ++i) {
+                    chess::Move move = board.moves_stack[i];
+
+                    std::cout << "Seeing " << chess::io::move_to_string(move, chess::default_notation());
+
+                    // Calculate SEE score
+                    chess::engine::see::SeeScore see_score =
+                        chess::engine::see::static_exchange_evaluation_score(board, move);
+
+                    // Determine result type
+                    std::string result_str;
+                    if (see_score > 0) {
+                        result_str = "Winning";
+                    } else if (see_score == 0) {
+                        result_str = "Equal";
+                    } else {
+                        result_str = "Losing";
+                    }
+
+                    std::cout << ": " << result_str << " capture with score "
+                              << (see_score >= 0 ? "" : "") << see_score << "\n";
+
+                    // Output current FEN
+                    std::cout << chess::io::fen::to_string(board) << "\n";
+                }
+                std::cout << "-----------------------------------\n";
+            }
+
         } else if (command == "perft") {
             // Perft command - performance test for move generation validation
             if (parameter.empty()) {
@@ -420,6 +536,32 @@ int main(int argc, char* argv[]) {
                     chess::engine::perfts::divide(board, depth);
                 }
             }
+
+        } else if (command == "xboard") {
+            // Xboard command - acknowledge Winboard/Xboard protocol mode
+            // This tells the GUI that we're ready to accept Winboard commands
+            std::cout << "\n";  // Just acknowledge, protocol mode would be set here
+
+        } else if (command == "protover") {
+            // Protover command - Winboard protocol version negotiation
+            // Send feature declarations including setboard support
+            std::cout << "feature myname=\"AdaChess\"\n";
+            std::cout << "feature memory=1\n";
+            std::cout << "feature colors=0\n";
+            std::cout << "feature setboard=1\n";
+            std::cout << "feature sigint=0\n";
+            std::cout << "feature sigterm=0\n";
+            std::cout << "feature usermove=0\n";
+            std::cout << "feature random=1\n";
+            std::cout << "feature option=\"Resign -check 0\"\n";
+            std::cout << "feature san=0\n";
+            std::cout.flush();
+            std::cout << "feature done=1\n";
+            std::cout.flush();
+
+        } else if (command == "accepted" || command == "rejected") {
+            // Accepted/Rejected - feedback from Winboard after feature declarations
+            // Just acknowledge, no action needed
 
         } else {
             // Unknown command - try parsing as a move
