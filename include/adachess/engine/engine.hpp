@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <cassert>
 #include <iostream>
+#include <optional>
 
 #include "adachess/colors.hpp"
 #include "adachess/pieces.hpp"
@@ -520,9 +521,13 @@ public:
      * Check if the king can escape from check.
      *
      * @param type_of_check The current check type.
+     * @param the_move Optional move being tested (for checkmate detection during
+     *                 move generation when move hasn't been stored in history yet).
+     *                 If nullopt, uses last_move_made() to get the attacking move info.
      * @return true if at least one legal move exists.
      */
-    [[nodiscard]] bool king_has_escapes(CheckType type_of_check);
+    [[nodiscard]] bool king_has_escapes(CheckType type_of_check,
+                                         const std::optional<Move>& the_move = std::nullopt);
 
     // ========================================================================
     // Move Registration Methods
