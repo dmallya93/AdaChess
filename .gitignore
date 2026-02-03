@@ -1,7 +1,12 @@
 # Build directories
 build/
+build_*/
 cmake-build-*/
 out/
+
+# Core dumps
+core
+core.*
 
 # IDE files
 .vscode/

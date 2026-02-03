@@ -917,14 +917,14 @@ CheckType Chessboard::move_checks_opponent_king(const Move& move) {
     }
     // Direct Check - Pawn
     else if (move.piece == Piece::WhitePawn && move.promotion == Piece::Empty) {
-        if (move.to + board::kNorthWest == black_king_position ||
+        if (move.to + board::kNorthWest == king_position ||
             move.to + board::kNorthEast == king_position) {
             type_of_check = CheckType::DirectCheck;
         }
     }
     else if (move.piece == Piece::BlackPawn && move.promotion == Piece::Empty) {
         if (move.to + board::kSouthEast == king_position ||
-            move.to + board::kSouthWest == white_king_position) {
+            move.to + board::kSouthWest == king_position) {
             type_of_check = CheckType::DirectCheck;
         }
     }
@@ -1094,8 +1094,8 @@ CheckType Chessboard::move_checks_opponent_king(const Move& move) {
 
         side_to_move = flip(side_to_move);
 
-        // Check for escapes
-        if (!king_has_escapes(type_of_check)) {
+        // Check for escapes - pass the move being tested since it's not in history yet
+        if (!king_has_escapes(type_of_check, move)) {
             type_of_check = CheckType::Checkmate;
         }
 
@@ -1132,7 +1132,8 @@ CheckType Chessboard::move_checks_opponent_king(const Move& move) {
     return type_of_check;
 }
 
-bool Chessboard::king_has_escapes(CheckType type_of_check) {
+bool Chessboard::king_has_escapes(CheckType type_of_check,
+                                   const std::optional<Move>& the_move) {
     board::Square target;
     board::AttackCollection attack_to_the_king;
     Piece attacker = Piece::Empty;
@@ -1176,7 +1177,8 @@ bool Chessboard::king_has_escapes(CheckType type_of_check) {
             attacker = attack_to_the_king.attackers[0].piece;
             origin = attack_to_the_king.attackers[0].origin;
         } else {
-            Move last = last_move_made();
+            // Use the provided move if available, otherwise get from history
+            Move last = the_move.has_value() ? the_move.value() : last_move_made();
             if (last.flag == MoveFlag::Castle) {
                 attacker = Piece::BlackRook;
                 origin = (last.to == board::G8) ? board::F8 : board::D8;
@@ -1298,7 +1300,8 @@ bool Chessboard::king_has_escapes(CheckType type_of_check) {
             attacker = attack_to_the_king.attackers[0].piece;
             origin = attack_to_the_king.attackers[0].origin;
         } else {
-            Move last = last_move_made();
+            // Use the provided move if available, otherwise get from history
+            Move last = the_move.has_value() ? the_move.value() : last_move_made();
             if (last.flag == MoveFlag::Castle) {
                 attacker = Piece::WhiteRook;
                 origin = (last.to == board::G1) ? board::F1 : board::D1;

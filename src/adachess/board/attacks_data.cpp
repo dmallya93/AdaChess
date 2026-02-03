@@ -49,12 +49,12 @@ Direction get_direction_impl(Square origin, Square destination) noexcept {
     // - Indices increase by 10 going south (rank 8 -> rank 1)
 
     // Same file -> North or South
+    // In Ada: origin < destination => North
+    // Lower board indices are towards rank 8 (top), higher are towards rank 1 (bottom)
     if (file(origin) == file(destination)) {
-        if (origin > destination) {
-            // destination has lower index = moving north
+        if (origin < destination) {
             return kNorth;
         } else {
-            // destination has higher index = moving south
             return kSouth;
         }
     }

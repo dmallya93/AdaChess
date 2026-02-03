@@ -26,6 +26,7 @@
 #include "adachess/board/board.hpp"
 #include "adachess/board/attacks_data.hpp"
 #include "adachess/engine/engine.hpp"
+#include "adachess/engine/perfts.hpp"
 
 // Utility headers
 #include "adachess/libs/string_lib.hpp"
@@ -74,11 +75,37 @@ void print_help() {
               << "  play <move>, p   - Make a move (e.g., 'play e4' or 'p Nf3')\n"
               << "  undo, u          - Take back the last move\n"
               << "  new              - Start a new game\n"
+              << "  perft <depth>    - Run perft to the specified depth (1-10)\n"
+              << "  divide <depth>   - Run divide to the specified depth (0-10)\n"
+              << "  notation [type]  - Show or set notation (san, lan, winboard, iccf)\n"
               << "  help, h          - Show this help message\n"
               << "  quit, q          - Exit the program\n"
               << "\nMove notation:\n"
               << "  Accepts SAN (e4, Nf3, O-O), coordinate (e2e4), or LAN (e2-e4)\n"
+              << "\nPerft testing:\n"
+              << "  perft 5          - Count all positions at depth 5 with statistics\n"
+              << "  divide 5         - Show perft counts for each first move\n"
               << "\n";
+}
+
+/**
+ * Parse a depth value from a string.
+ * Returns 0 on failure, otherwise the parsed depth.
+ */
+chess::Depth parse_depth(const std::string& str, chess::Depth max_depth = 10) {
+    if (str.empty()) {
+        return 0;
+    }
+
+    try {
+        int value = std::stoi(str);
+        if (value < 0 || value > static_cast<int>(max_depth)) {
+            return 0;
+        }
+        return static_cast<chess::Depth>(value);
+    } catch (...) {
+        return 0;
+    }
 }
 
 /**
@@ -334,6 +361,38 @@ int main(int argc, char* argv[]) {
                 } else {
                     std::cout << "Unknown notation: " << parameter << "\n";
                     std::cout << "Available: san, lan, winboard/coordinate, iccf\n";
+                }
+            }
+
+        } else if (command == "perft") {
+            // Perft command - performance test for move generation validation
+            if (parameter.empty()) {
+                std::cout << "Error: Please specify a depth. Usage: perft <depth>\n";
+                std::cout << "Example: perft 5\n";
+            } else {
+                chess::Depth depth = parse_depth(parameter, 10);
+                if (depth == 0 && parameter != "0") {
+                    std::cout << "Error: Invalid depth '" << parameter << "'. Depth must be 1-10.\n";
+                } else if (depth == 0) {
+                    std::cout << "Error: Perft depth must be at least 1.\n";
+                } else {
+                    std::cout << "\nRunning perft to depth " << depth << "...\n\n";
+                    chess::engine::perfts::perft(board, depth);
+                }
+            }
+
+        } else if (command == "divide") {
+            // Divide command - perft split by first move for debugging
+            if (parameter.empty()) {
+                std::cout << "Error: Please specify a depth. Usage: divide <depth>\n";
+                std::cout << "Example: divide 5\n";
+            } else {
+                chess::Depth depth = parse_depth(parameter, 10);
+                if (depth == 0 && parameter != "0") {
+                    std::cout << "Error: Invalid depth '" << parameter << "'. Depth must be 0-10.\n";
+                } else {
+                    std::cout << "\nRunning divide to depth " << depth << "...\n\n";
+                    chess::engine::perfts::divide(board, depth);
                 }
             }
 
