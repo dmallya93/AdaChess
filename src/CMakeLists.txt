@@ -18,6 +18,8 @@ set(ADACHESS_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/engine/engine.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/engine/perfts.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/adachess/engine/see.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/adachess/engine/evaluations/evaluations.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/adachess/engine/evaluations/static_evaluations.cpp
 )
 
 # Core type system headers
@@ -43,6 +45,8 @@ set(ADACHESS_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/adachess/engine/engine.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/engine/perfts.hpp
     ${CMAKE_SOURCE_DIR}/include/adachess/engine/see.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/engine/evaluations/evaluations.hpp
+    ${CMAKE_SOURCE_DIR}/include/adachess/engine/evaluations/static_evaluations.hpp
 )
 
 # Create the core library (static library with implementation files)
