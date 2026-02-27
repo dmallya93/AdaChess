@@ -106,7 +106,7 @@ TEST(StringLibTest, IndexOf) {
 }
 
 TEST(StringLibTest, IndexOfThrows) {
-    EXPECT_THROW(index_of("hello", 'x'), DelimiterNotFound);
+    EXPECT_THROW((void)index_of("hello", 'x'), DelimiterNotFound);
 }
 
 // -----------------------------------------------------------------------
