@@ -56,6 +56,102 @@
                 "ADACHESS_PROFILE_BUILD": "ON",
                 "ADACHESS_STRICT_WARNINGS": "OFF"
             }
+        },
+        {
+            "name": "debug-gcc",
+            "displayName": "Debug (GCC)",
+            "description": "Debug build using the GCC toolchain file",
+            "inherits": "debug",
+            "binaryDir": "${sourceDir}/build/debug-gcc",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/gcc.cmake"
+        },
+        {
+            "name": "release-gcc",
+            "displayName": "Release (GCC)",
+            "description": "Release build using the GCC toolchain file",
+            "inherits": "release",
+            "binaryDir": "${sourceDir}/build/release-gcc",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/gcc.cmake"
+        },
+        {
+            "name": "speed-gcc",
+            "displayName": "Speed (GCC)",
+            "description": "Speed build using the GCC toolchain file",
+            "inherits": "speed",
+            "binaryDir": "${sourceDir}/build/speed-gcc",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/gcc.cmake"
+        },
+        {
+            "name": "profile-gcc",
+            "displayName": "Profile (GCC)",
+            "description": "Profile build using the GCC toolchain file",
+            "inherits": "profile",
+            "binaryDir": "${sourceDir}/build/profile-gcc",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/gcc.cmake"
+        },
+        {
+            "name": "debug-clang",
+            "displayName": "Debug (Clang)",
+            "description": "Debug build using the Clang toolchain file",
+            "inherits": "debug",
+            "binaryDir": "${sourceDir}/build/debug-clang",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/clang.cmake"
+        },
+        {
+            "name": "release-clang",
+            "displayName": "Release (Clang)",
+            "description": "Release build using the Clang toolchain file",
+            "inherits": "release",
+            "binaryDir": "${sourceDir}/build/release-clang",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/clang.cmake"
+        },
+        {
+            "name": "speed-clang",
+            "displayName": "Speed (Clang)",
+            "description": "Speed build using the Clang toolchain file",
+            "inherits": "speed",
+            "binaryDir": "${sourceDir}/build/speed-clang",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/clang.cmake"
+        },
+        {
+            "name": "profile-clang",
+            "displayName": "Profile (Clang)",
+            "description": "Profile build using the Clang toolchain file",
+            "inherits": "profile",
+            "binaryDir": "${sourceDir}/build/profile-clang",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/clang.cmake"
+        },
+        {
+            "name": "debug-msvc",
+            "displayName": "Debug (MSVC)",
+            "description": "Debug build using the MSVC toolchain file",
+            "inherits": "debug",
+            "binaryDir": "${sourceDir}/build/debug-msvc",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/msvc.cmake"
+        },
+        {
+            "name": "release-msvc",
+            "displayName": "Release (MSVC)",
+            "description": "Release build using the MSVC toolchain file",
+            "inherits": "release",
+            "binaryDir": "${sourceDir}/build/release-msvc",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/msvc.cmake"
+        },
+        {
+            "name": "speed-msvc",
+            "displayName": "Speed (MSVC)",
+            "description": "Speed build using the MSVC toolchain file",
+            "inherits": "speed",
+            "binaryDir": "${sourceDir}/build/speed-msvc",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/msvc.cmake"
+        },
+        {
+            "name": "profile-msvc",
+            "displayName": "Profile (MSVC)",
+            "description": "Profile build using the MSVC toolchain file",
+            "inherits": "profile",
+            "binaryDir": "${sourceDir}/build/profile-msvc",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/msvc.cmake"
         }
     ],
     "buildPresets": [
@@ -74,12 +170,58 @@
         {
             "name": "profile",
             "configurePreset": "profile"
+        },
+        {
+            "name": "debug-gcc",
+            "configurePreset": "debug-gcc"
+        },
+        {
+            "name": "release-gcc",
+            "configurePreset": "release-gcc"
+        },
+        {
+            "name": "speed-gcc",
+            "configurePreset": "speed-gcc"
+        },
+        {
+            "name": "profile-gcc",
+            "configurePreset": "profile-gcc"
+        },
+        {
+            "name": "debug-clang",
+            "configurePreset": "debug-clang"
+        },
+        {
+            "name": "release-clang",
+            "configurePreset": "release-clang"
+        },
+        {
+            "name": "speed-clang",
+            "configurePreset": "speed-clang"
+        },
+        {
+            "name": "profile-clang",
+            "configurePreset": "profile-clang"
         }
     ],
     "testPresets": [
         {
             "name": "debug",
             "configurePreset": "debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "debug-gcc",
+            "configurePreset": "debug-gcc",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "debug-clang",
+            "configurePreset": "debug-clang",
             "output": {
                 "outputOnFailure": true
             }

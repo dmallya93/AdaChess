@@ -22,56 +22,22 @@ option(ADACHESS_STRICT_WARNINGS "Enable strict compiler warnings"  ON)
 option(ADACHESS_PROFILE_BUILD  "Enable profiling instrumentation"  OFF)
 
 # ---------------------------------------------------------------------------
-# Compiler warnings
+# Include cmake/ helper modules
 # ---------------------------------------------------------------------------
-if(ADACHESS_STRICT_WARNINGS)
-    if(MSVC)
-        add_compile_options(/W4 /WX)
-    else()
-        add_compile_options(-Wall -Wextra -Wpedantic -Werror)
-    endif()
-endif()
+# Compiler version checks and warning flags (cmake/CompilerWarnings.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CompilerWarnings.cmake)
 
-# ---------------------------------------------------------------------------
-# Build-type specific flags (beyond CMake defaults)
-# ---------------------------------------------------------------------------
-# CMake provides: Debug (-g), Release (-O3 -DNDEBUG), RelWithDebInfo, MinSizeRel.
-# We add custom configurations Speed and Profile.
+# Custom build types: Speed, Profile (cmake/BuildTypes.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/BuildTypes.cmake)
 
-# Speed: aggressive optimization
-set(CMAKE_CXX_FLAGS_SPEED "-O3 -DNDEBUG" CACHE STRING "Flags for Speed build")
-if(NOT MSVC)
-    string(APPEND CMAKE_CXX_FLAGS_SPEED " -finline-functions -funroll-loops")
-endif()
-
-# Profile: optimized with debug info for profiling
-set(CMAKE_CXX_FLAGS_PROFILE "-O2 -g -DNDEBUG" CACHE STRING "Flags for Profile build")
-if(NOT MSVC)
-    string(APPEND CMAKE_CXX_FLAGS_PROFILE " -fno-omit-frame-pointer")
-endif()
-
-# Register custom build types so IDEs and generators recognize them
-get_property(_is_multi GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-if(_is_multi)
-    if(NOT "Speed" IN_LIST CMAKE_CONFIGURATION_TYPES)
-        list(APPEND CMAKE_CONFIGURATION_TYPES Speed Profile)
-    endif()
-else()
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-        Debug Release Speed Profile RelWithDebInfo MinSizeRel)
-endif()
+# LTO support (cmake/LTO.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/LTO.cmake)
 
 # ---------------------------------------------------------------------------
-# LTO support
+# LTO
 # ---------------------------------------------------------------------------
 if(ADACHESS_ENABLE_LTO)
-    include(CheckIPOSupported)
-    check_ipo_supported(RESULT _lto_supported OUTPUT _lto_output)
-    if(_lto_supported)
-        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-    else()
-        message(WARNING "LTO not supported: ${_lto_output}")
-    endif()
+    adachess_enable_lto()
 endif()
 
 # ---------------------------------------------------------------------------
@@ -100,6 +66,11 @@ target_include_directories(adachess_core PUBLIC
 
 target_compile_features(adachess_core PUBLIC cxx_std_20)
 
+# Apply strict warnings if enabled (via cmake/CompilerWarnings.cmake)
+if(ADACHESS_STRICT_WARNINGS)
+    adachess_set_warnings(adachess_core)
+endif()
+
 # Platform-specific link libraries
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries(adachess_core PUBLIC pthread)
@@ -113,6 +84,11 @@ add_executable(adachess
 )
 
 target_link_libraries(adachess PRIVATE adachess_core)
+
+# Apply strict warnings if enabled (via cmake/CompilerWarnings.cmake)
+if(ADACHESS_STRICT_WARNINGS)
+    adachess_set_warnings(adachess)
+endif()
 
 # ---------------------------------------------------------------------------
 # Tests (Google Test via FetchContent)
