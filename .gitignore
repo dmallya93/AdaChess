@@ -1,7 +1,31 @@
 # =============================================================================
 # Universal .gitignore — covers common build artifacts across all languages.
-# The task agent will refine this with project-specific patterns.
 # =============================================================================
+
+# ----- C / C++ -----
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.d
+*.gch
+*.pch
+compile_commands.json
+
+# ----- CMake -----
+build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+_deps/
+CMakeUserPresets.json
+Testing/
 
 # ----- Python -----
 __pycache__/

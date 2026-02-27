@@ -1,0 +1,88 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 22,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "debug",
+            "displayName": "Debug",
+            "description": "Debug build with assertions and full debug info",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "ADACHESS_BUILD_TESTS": "ON",
+                "ADACHESS_STRICT_WARNINGS": "ON"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release",
+            "description": "Optimized release build with LTO",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ADACHESS_BUILD_TESTS": "OFF",
+                "ADACHESS_ENABLE_LTO": "ON",
+                "ADACHESS_STRICT_WARNINGS": "OFF"
+            }
+        },
+        {
+            "name": "speed",
+            "displayName": "Speed",
+            "description": "Maximum performance build",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/speed",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Speed",
+                "ADACHESS_BUILD_TESTS": "OFF",
+                "ADACHESS_ENABLE_LTO": "ON",
+                "ADACHESS_STRICT_WARNINGS": "OFF"
+            }
+        },
+        {
+            "name": "profile",
+            "displayName": "Profile",
+            "description": "Profiling build with frame pointers",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/profile",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Profile",
+                "ADACHESS_BUILD_TESTS": "OFF",
+                "ADACHESS_PROFILE_BUILD": "ON",
+                "ADACHESS_STRICT_WARNINGS": "OFF"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "release",
+            "configurePreset": "release"
+        },
+        {
+            "name": "speed",
+            "configurePreset": "speed"
+        },
+        {
+            "name": "profile",
+            "configurePreset": "profile"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+}
